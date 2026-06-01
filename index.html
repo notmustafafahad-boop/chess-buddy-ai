@@ -44,15 +44,11 @@
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     
     <script>
-        // This function tells the board to fetch the piece images from the web
-        function pieceTheme (piece) {
-            return 'https://chessboardjs.com/img/chesspieces/wikipedia/' + piece + '.png';
-        }
-
+        // Bulletproof configuration pulling images directly from the CDN
         var config = {
             position: 'start',
             draggable: true,
-            pieceTheme: pieceTheme
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
         };
         
         var board = Chessboard('my-board', config);
