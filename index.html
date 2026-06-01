@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Buddy AI</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    
+    <style>
+        /* Modern Dark Mode Styling */
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        #my-board {
+            width: 400px;
+            max-width: 90vw;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Chess Buddy AI</h1>
+    
+    <div id="my-board"></div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    
+    <script>
+        // Start the board up with all pieces in their default positions
+        var config = {
+            position: 'start',
+            draggable: true
+        };
+        var board = Chessboard('my-board', config);
+    </script>
+</body>
+</html>
