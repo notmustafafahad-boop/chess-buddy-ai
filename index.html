@@ -38,8 +38,6 @@
 <body>
 
     <h1>Chess Buddy AI</h1>
-    
-    <!-- This is where the chess board renders on the screen -->
     <div id="my-board"></div>
 
     <!-- JavaScript libraries -->
@@ -51,45 +49,75 @@
         var game = new Chess();
         var board = null;
 
-        function makeRandomMove () {
+        // Assign numeric values to pieces (Positive for White, Negative for Black)
+        function getPieceValue(piece) {
+            if (piece === null) return 0;
+            
+            var values = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 };
+            var value = values[piece.type];
+            
+            return piece.color === 'w' ? value : -value;
+        }
+
+        // Tally up the score of the entire board
+        function evaluateBoard(boardState) {
+            var totalEvaluation = 0;
+            for (var i = 0; i < 8; i++) {
+                for (var j = 0; j < 8; j++) {
+                    totalEvaluation += getPieceValue(boardState[i][j]);
+                }
+            }
+            return totalEvaluation;
+        }
+
+        // Look ahead 1 move and pick the absolute best option
+        function makeBestMove() {
             var possibleMoves = game.moves();
 
-            // Game over checks
             if (game.game_over()) {
                 alert('Game over!');
                 return;
             }
 
-            // Pick a random move from the list of legal options
-            var randomIdx = Math.floor(Math.random() * possibleMoves.length);
-            game.move(possibleMoves[randomIdx]);
-            
-            // Update the visual board with the AI's move
+            var bestMove = null;
+            // We want the lowest score because Black pieces are negative values
+            var bestValue = 9999; 
+
+            for (var i = 0; i < possibleMoves.length; i++) {
+                var move = possibleMoves[i];
+                game.move(move); // Test the move out in the referee's head
+                
+                var boardValue = evaluateBoard(game.board());
+                game.undo(); // Take the test move back
+
+                if (boardValue < bestValue) {
+                    bestValue = boardValue;
+                    bestMove = move;
+                }
+            }
+
+            // Execute the winning move
+            game.move(bestMove);
             board.position(game.fen());
 
-            // Check if AI's move ended the game
             if (game.game_over()) {
                 alert('Game over!');
             }
         }
 
         function onDrop (source, target, piece, newPos, oldPos, orientation) {
-            // See if the player's move is legal
             var move = game.move({
                 from: source,
                 to: target,
                 promotion: 'q' 
             });
 
-            // If illegal, snap back
             if (move === null) return 'snapback';
 
-            // Sync visual positions (handles en passant/castling graphics)
             window.setTimeout(function() {
                 board.position(game.fen());
-                
-                // Trigger the AI to move 250 milliseconds after the player finishes
-                window.setTimeout(makeRandomMove, 250);
+                // Trigger the smart AI calculation
+                window.setTimeout(makeBestMove, 250);
             }, 250);
         }
 
