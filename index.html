@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Buddy AI - Premium Green & Black Edition</title>
+    <title>Chess Buddy AI - Premium Interactive Grid</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     
@@ -22,7 +22,7 @@
         body {
             background-color: var(--dark-bg);
             color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -32,18 +32,17 @@
             align-items: center;
         }
 
-        /* SCREEN MULTIPLEXER FLOW SYSTEM */
+        /* SCREEN MULTIPLEXER ROUTING SYSTEM */
         .screen { display: none; width: 100%; padding: 20px; box-sizing: border-box; }
         .screen.active { display: flex; flex-direction: column; align-items: center; }
 
         /* ==========================================
-           SCREEN 1: MODERN HOME/LANDING PAGE STYLES
+           SCREEN 1: CONNECTED HERO LANDING VIEW
            ========================================== */
         .home-container {
-            max-width: 1000px;
+            max-width: 1050px;
             width: 100%;
-            text-align: center;
-            gap: 30px;
+            gap: 20px;
         }
 
         .navbar {
@@ -51,22 +50,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 15px 0;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 40px;
+            margin-bottom: 25px;
         }
 
         .logo-text {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
             color: var(--chess-green);
             letter-spacing: 0.5px;
         }
 
-        .nav-auth-buttons {
-            display: flex;
-            gap: 12px;
-        }
+        .nav-auth-buttons { display: flex; gap: 12px; }
 
         .btn-nav {
             background: transparent;
@@ -80,60 +76,41 @@
             transition: all 0.2s;
         }
 
-        .btn-nav.primary {
-            background: var(--chess-green);
-            border-color: var(--chess-green);
-        }
-
-        .btn-nav:hover {
-            border-color: var(--chess-green);
-            transform: translateY(-1px);
-        }
+        .btn-nav.primary { background: var(--chess-green); border-color: var(--chess-green); }
+        .btn-nav:hover { border-color: var(--chess-green); transform: translateY(-1px); }
 
         .hero-section {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1.2fr 0.8fr;
             gap: 40px;
             align-items: center;
             text-align: left;
-            margin-bottom: 50px;
+            width: 100%;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 820px) {
             .hero-section { grid-template-columns: 1fr; text-align: center; }
             .hero-actions { justify-content: center; }
+            .hero-graphic { margin: 0 auto; }
         }
 
         .hero-title {
-            font-size: 46px;
+            font-size: 44px;
             font-weight: 800;
             line-height: 1.1;
             margin: 0 0 15px 0;
         }
 
-        .hero-title span {
-            color: var(--chess-green);
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin: 0 0 30px 0;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
+        .hero-title span { color: var(--chess-green); }
+        .hero-subtitle { font-size: 16px; color: var(--text-muted); line-height: 1.5; margin: 0 0 30px 0; }
+        .hero-actions { display: flex; gap: 15px; flex-wrap: wrap; }
 
         .main-cta {
             background: var(--chess-green);
             color: white;
             border: none;
             padding: 16px 32px;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
             border-radius: 6px;
             cursor: pointer;
@@ -141,52 +118,33 @@
             transition: all 0.2s;
         }
 
-        .main-cta:hover {
-            background: var(--chess-green-hover);
-            transform: translateY(-2px);
-        }
+        .main-cta:hover { background: var(--chess-green-hover); transform: translateY(-2px); }
 
         .secondary-cta {
             background: #252525;
             color: white;
             border: 1px solid #3d3d3d;
             padding: 16px 32px;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
         }
-
-        .secondary-cta:hover {
-            background: #333;
-            border-color: #555;
-            transform: translateY(-2px);
-        }
+        .secondary-cta:hover { background: #333; border-color: #555; transform: translateY(-2px); }
 
         .hero-graphic {
             background: var(--panel-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        .showcase-icon {
-            font-size: 120px;
-            animation: bounce 3s infinite ease-in-out;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(5deg); }
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            width: 320px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            box-sizing: border-box;
         }
 
         /* ==========================================
-           SCREEN 2: BOT SELECT LOBBY STYLES
+           SCREEN 2: BOT LOBBY MASTERBOARD STYLES
            ========================================== */
         .lobby-container {
             max-width: 1100px;
@@ -203,21 +161,8 @@
             box-sizing: border-box;
         }
 
-        .rank-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .bot-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-            gap: 15px;
-        }
+        .rank-title { font-size: 17px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .bot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 15px; }
 
         .bot-card {
             background: var(--card-bg);
@@ -228,14 +173,9 @@
             cursor: pointer;
             transition: transform 0.2s, border-color 0.2s;
         }
-
-        .bot-card:hover {
-            transform: translateY(-3px);
-            border-color: var(--chess-green);
-        }
-
-        .bot-avatar { font-size: 36px; margin-bottom: 8px; }
-        .bot-name { font-weight: bold; font-size: 15px; }
+        .bot-card:hover { transform: translateY(-3px); border-color: var(--chess-green); }
+        .bot-avatar { font-size: 34px; margin-bottom: 6px; }
+        .bot-name { font-weight: bold; font-size: 14px; }
         .bot-elo { font-size: 12px; color: var(--chess-green); font-weight: bold; margin-top: 2px; }
         .bot-desc { font-size: 11px; color: #888; margin-top: 6px; line-height: 1.3; }
 
@@ -319,14 +259,13 @@
         .con-tip { color: #e67e22; display: block; margin-top: 4px; }
 
         /* ==========================================
-           MODALS & OVERLAYS SYSTEM STYLES
+           MODALS, INTERFACES & OVERLAYS SYSTEM
            ========================================== */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center;
         }
         
-        /* Auth Modal Specifics */
         .auth-card {
             background: var(--panel-bg);
             border: 1px solid #333;
@@ -339,48 +278,21 @@
         }
 
         .auth-input {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            background: #2b2b2b;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 4px;
-            box-sizing: border-box;
-            outline: none;
+            width: 100%; padding: 12px; margin: 8px 0; background: #2b2b2b; border: 1px solid #444;
+            color: white; border-radius: 4px; box-sizing: border-box; outline: none;
         }
         .auth-input:focus { border-color: var(--chess-green); }
 
         .sso-btn {
-            width: 100%;
-            padding: 12px;
-            margin: 6px 0;
-            border-radius: 4px;
-            border: 1px solid #444;
-            background: white;
-            color: #222;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-size: 14px;
+            width: 100%; padding: 12px; margin: 6px 0; border-radius: 4px; border: 1px solid #444;
+            background: white; color: #222; font-weight: bold; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; gap: 10px; font-size: 14px;
         }
         .sso-btn.apple { background: #000; color: white; border: none; }
 
-        .divider {
-            margin: 15px 0;
-            color: #666;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+        .divider { margin: 15px 0; color: #666; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #333; }
 
-        /* Game Over Modal Card */
         .modal-card { background: var(--panel-bg); border: 1px solid #333; border-radius: 8px; width: 420px; max-width: 90vw; padding: 24px; text-align: center; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
         .stat-box { background: var(--card-bg); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); }
@@ -389,9 +301,8 @@
         .card-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid #252525; }
         .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
         .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .btn-primary { background: var(--chess-green); color: white; }
-        .btn-secondary { background: #333; color: #aaa; }
-
+        
+        #restart-btn { background: #e67e22; border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         #leave-btn, #home-btn { background: #333; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 
         @media (max-width: 700px) {
@@ -413,15 +324,16 @@
 
         <div class="hero-section">
             <div>
-                <h1 class="hero-title">Elevate Your Chess Game against <span>Adaptive AI</span></h1>
-                <p class="hero-subtitle">Welcome to the ultimate digital tactical arena. Battle 25 custom-calibrated bot personalities across 5 tiers of mastery, or challenge friends locally with a native analysis breakdown.</p>
+                <h1 class="hero-title">Elevate Your Strategy Against <span>Adaptive AI</span></h1>
+                <p class="hero-subtitle">Welcome to the digital chess arena. Challenge 25 uniquely calibrated bot characters across 5 distinct skill tiers, or jump right into a local battle against friends.</p>
                 <div class="hero-actions">
                     <button class="main-cta" onclick="switchScreen('lobby-screen')">Play vs AI Bots</button>
                     <button class="secondary-cta" onclick="startLocalPassAndPlay()">Play Local Friend</button>
                 </div>
             </div>
             <div class="hero-graphic">
-                <div class="showcase-icon">👑</div>
+                <div style="text-align: center; margin-bottom: 8px; font-size: 12px; color: var(--text-muted); font-weight: bold;">PREVIEW CHESSBOARD</div>
+                <div id="showcase-board" style="width: 100%;"></div>
             </div>
         </div>
     </div>
@@ -430,32 +342,32 @@
     <div class="screen lobby-container" id="lobby-screen">
         <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
             <button id="home-btn" onclick="switchScreen('home-screen')">◀ Return Home</button>
-            <h1 style="margin:0; color: var(--chess-green);">Select Your Opponent</h1>
+            <h1 style="margin:0; color: var(--chess-green); font-size: 24px;">Select Your Opponent</h1>
             <div style="width:90px;"></div>
         </div>
         
         <div class="rank-section">
-            <div class="rank-title" style="color: #5cacf7;">👶 Rank: Beginners (Elo 600 - 1050)</div>
+            <div class="rank-title" style="color: #5cacf7;">👶 Beginners (Elo 600 - 1050)</div>
             <div class="bot-grid" id="grid-beginner"></div>
         </div>
 
         <div class="rank-section">
-            <div class="rank-title" style="color: var(--chess-green);">🟢 Rank: Intermediates (Elo 1150 - 1550)</div>
+            <div class="rank-title" style="color: var(--chess-green);">🟢 Intermediates (Elo 1150 - 1550)</div>
             <div class="bot-grid" id="grid-intermediate"></div>
         </div>
 
         <div class="rank-section">
-            <div class="rank-title" style="color: #f7c04a;">📐 Rank: Experts (Elo 1650 - 2050)</div>
+            <div class="rank-title" style="color: #f7c04a;">📐 Experts (Elo 1650 - 2050)</div>
             <div class="bot-grid" id="grid-expert"></div>
         </div>
 
         <div class="rank-section">
-            <div class="rank-title" style="color: #e67e22;">👑 Rank: Grandmasters (Elo 2150 - 2550)</div>
+            <div class="rank-title" style="color: #e67e22;">👑 Grandmasters (Elo 2150 - 2550)</div>
             <div class="bot-grid" id="grid-gm"></div>
         </div>
 
         <div class="rank-section">
-            <div class="rank-title" style="color: #b43c3c;">🌋 Rank: Super GMs (Elo 2650 - 3100)</div>
+            <div class="rank-title" style="color: #b43c3c;">🌋 Super GMs (Elo 2650 - 3100)</div>
             <div class="bot-grid" id="grid-supergm"></div>
         </div>
     </div>
@@ -479,7 +391,7 @@
             <div id="move-history"></div>
             
             <div class="review-panel" id="review-controls">
-                <div id="review-reasoning">Use control tracks to analyze alternative move profiles.</div>
+                <div id="review-reasoning">Use controls to analyze variations.</div>
                 <div class="review-buttons">
                     <button class="review-btn" onclick="reviewMove(-1)">◀ Prev</button>
                     <button class="review-btn" onclick="reviewMove(1)">Next ▶</button>
@@ -494,23 +406,16 @@
             <h2 id="auth-title" style="margin-top:0; color:var(--chess-green);">Access Account</h2>
             <p id="auth-desc" style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Synchronize profiles & performance history.</p>
             
-            <button class="sso-btn" onclick="mockAuthSuccess('Google')">
-                <img src="https://cdnjs.cloudflare.com/ajax/libs/gapi-javascript-client/1.1.0/assets/logo.png" style="width:16px; display:none;" alt="">
-                Continue with Google
-            </button>
-            <button class="sso-btn apple" onclick="mockAuthSuccess('Apple')">
-                Continue with Apple
-            </button>
+            <button class="sso-btn" onclick="mockAuthSuccess('Google')">Continue with Google</button>
+            <button class="sso-btn apple" onclick="mockAuthSuccess('Apple')">Continue with Apple</button>
 
-            <div class="divider">or secure email credentials</div>
+            <div class="divider">or use email credentials</div>
 
             <input type="email" class="auth-input" placeholder="Email Address">
             <input type="password" class="auth-input" placeholder="Security Password">
 
-            <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" id="auth-submit-btn" onclick="mockAuthSuccess('Credentials')">
-                Authenticate
-            </button>
-            <button class="btn-nav" style="border:none; margin-top:10px; font-size:12px; color:var(--text-muted);" onclick="closeAuthModal(null)">Cancel</button>
+            <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" id="auth-submit-btn" onclick="mockAuthSuccess('Credentials')">Authenticate</button>
+            <button class="btn-nav" style="border:none; margin-top:10px; font-size:12px; color:var(--text-muted);" onclick="document.getElementById('auth-modal').style.display='none'">Cancel</button>
         </div>
     </div>
 
@@ -534,24 +439,24 @@
             <div style="background:#252525; padding:10px; border-radius:6px; margin-bottom:15px; border:1px solid #2a2a2a; text-align:left;">
                 <div class="card-row"><span>✨ Best Selections:</span><strong id="cnt-best" style="color:var(--chess-green);">0</strong></div>
                 <div class="card-row"><span>🟢 Solid Moves:</span><strong id="cnt-good" style="color:#4e702e;">0</strong></div>
-                <div class="card-row"><span>🟠 Inaccuracies / Mistakes:</span><strong id="cnt-mistake" style="color:#e67e22;">0</strong></div>
+                <div class="card-row"><span>🟠 Mistakes:</span><strong id="cnt-mistake" style="color:#e67e22;">0</strong></div>
                 <div class="card-row"><span>🔴 Critical Blunders:</span><strong id="cnt-blunder" style="color:#b43c3c;">0</strong></div>
             </div>
 
             <div class="modal-actions">
-                <button class="modal-btn btn-secondary" onclick="closeModalAndExit()">Back to Lobby</button>
-                <button class="modal-btn btn-primary" onclick="startReviewFromModal()">Review Match</button>
+                <button class="modal-btn" style="background:#333; color:#aaa;" onclick="closeModalAndExit()">Back to Lobby</button>
+                <button class="modal-btn" style="background:var(--chess-green); color:white;" onclick="startReviewFromModal()">Review Match</button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     
     <script>
         var game = new Chess();
         var board = null;
+        var showcaseBoard = null;
         var activeBot = null; 
         var isLocalFriendMode = false; 
 
@@ -594,14 +499,330 @@
             ],
             supergm: [
                 { id: "s1", name: "Volcano Magnus", elo: 2650, avatar: "🌋", desc: "Slow positional pressure that completely suffocates space choices.", blunderChance: 0.00, depth: 3, dynamicPos: true },
-                { id: "s2", name: "Deep Sight", elo: 2750, avatar: "👁️", desc: "Incredible lookahead mapping engine. Predicts and neutralizes tactical threats far in advance.", blunderChance: 0.00, depth: 4, dynamicPos: true },
+                { id: "s2", name: "Deep Sight", elo: 2750, avatar: "👁️", desc: "Incredible lookahead mapping engine. Predicts and punches deep tactical lines.", blunderChance: 0.00, depth: 4, dynamicPos: true },
                 { id: "s3", name: "Cosmic Entity", elo: 2850, avatar: "🪐", desc: "Unorthodox, hyper-modern lines that confuse human opening frameworks easily.", blunderChance: 0.00, depth: 4, dynamicPos: true },
                 { id: "s4", name: "Quantum Shock", elo: 2950, avatar: "⚡", desc: "Devastating dynamic chess calculations. Exploits tiny defensive gaps instantly.", blunderChance: 0.00, depth: 4, dynamicPos: true },
                 { id: "s5", name: "Matrix Overlord", elo: 3100, avatar: "🛸", desc: "Pure computational perfection. Simulated to mirror maximum engine capabilities.", blunderChance: 0.00, depth: 4, dynamicPos: true }
             ]
         };
 
-        // Positional coordinate square matrices
-        var pawnEval = [
-            [0,0,0,0,0,0,0,0],[5,5,5,5,5,5,5,5],[1,1,2,3,3,2,1,1],[0.5,0.5,1,2.5,2.5,1,0.5,0.5],
-            [0,0,0,2,2,0,0,0],
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            document.getElementById(screenId).style.display = 'flex';
+            
+            // Re-render and fit the board geometry instantly on window context swaps
+            if (screenId === 'game-screen' && board) { board.resize(); }
+            if (screenId === 'home-screen' && showcaseBoard) { showcaseBoard.resize(); }
+        }
+
+        function openAuthModal(mode) {
+            if (mode === 'login') {
+                document.getElementById('auth-title').innerText = 'Welcome Back';
+                document.getElementById('auth-submit-btn').innerText = 'Log In';
+            } else {
+                document.getElementById('auth-title').innerText = 'Create Account';
+                document.getElementById('auth-submit-btn').innerText = 'Sign Up';
+            }
+            document.getElementById('auth-modal').style.display = 'flex';
+        }
+
+        function closeAuthModal(e) {
+            if (!e || e.target === document.getElementById('auth-modal')) {
+                document.getElementById('auth-modal').style.display = 'none';
+            }
+        }
+
+        function mockAuthSuccess(provider) {
+            alert(`Authenticated via ${provider}! (Simulation Active)`);
+            document.getElementById('auth-modal').style.display = 'none';
+        }
+
+        function initLobbyGrids() {
+            Object.keys(botDatabase).forEach(rankKey => {
+                var container = document.getElementById("grid-" + rankKey);
+                container.innerHTML = "";
+                botDatabase[rankKey].forEach(bot => {
+                    var card = document.createElement("div");
+                    card.className = "bot-card";
+                    card.onclick = () => launchMatchAgainstBot(bot);
+                    card.innerHTML = `
+                        <div class="bot-avatar">${bot.avatar}</div>
+                        <div class="bot-name">${bot.name}</div>
+                        <div class="bot-elo">${bot.elo} ELO</div>
+                        <div class="bot-desc">${bot.desc}</div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        function launchMatchAgainstBot(botObj) {
+            activeBot = botObj;
+            isLocalFriendMode = false;
+            document.getElementById("matchup-header").innerText = `Match vs ${activeBot.avatar} ${activeBot.name} (${activeBot.elo})`;
+            switchScreen('game-screen');
+            resetGame();
+        }
+
+        function startLocalPassAndPlay() {
+            activeBot = null;
+            isLocalFriendMode = true;
+            document.getElementById("matchup-header").innerText = "Local Match: Pass & Play";
+            switchScreen('game-screen');
+            resetGame();
+        }
+
+        function quitActiveMatch() {
+            if (isLocalFriendMode) { switchScreen('home-screen'); } 
+            else { switchScreen('lobby-screen'); }
+        }
+
+        function playSound(isCapture) {
+            try {
+                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                var osc = audioCtx.createOscillator();
+                var gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.frequency.setValueAtTime(isCapture ? 170 : 120, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(isCapture ? 70 : 50, audioCtx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.12);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+            } catch(e){}
+        }
+
+        function evaluateBoard(boardState, dynamicPos) {
+            var score = 0;
+            for (var i=0; i<8; i++) {
+                for (var j=0; j<8; j++) {
+                    var piece = boardState[i][j];
+                    if (piece) {
+                        var values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+                        var val = values[piece.type];
+                        score += (piece.color === 'w' ? val : -val);
+                    }
+                }
+            }
+            return score;
+        }
+
+        function minimax(depth, alpha, beta, isMax) {
+            if (depth === 0 || game.game_over()) return evaluateBoard(game.board());
+            var possibleMoves = game.moves();
+            if (isMax) {
+                var best = -999999;
+                for (var i=0; i<possibleMoves.length; i++) {
+                    game.move(possibleMoves[i]);
+                    best = Math.max(best, minimax(depth-1, alpha, beta, false));
+                    game.undo(); alpha = Math.max(alpha, best); if (beta <= alpha) break;
+                }
+                return best;
+            } else {
+                var best = 999999;
+                for (var i=0; i<possibleMoves.length; i++) {
+                    game.move(possibleMoves[i]);
+                    best = Math.min(best, minimax(depth-1, alpha, beta, true));
+                    game.undo(); beta = Math.min(beta, best); if (beta <= alpha) break;
+                }
+                return best;
+            }
+        }
+
+        function updateStatusAndLog() {
+            var statusText = "";
+            if (game.game_over() && !isReviewMode) {
+                statusText = "Match Complete! Processing calculations...";
+                setTimeout(compileGameSummary, 600);
+            } else if (isReviewMode) {
+                statusText = `Reviewing Move ${reviewCurrentIndex + 1} / ${reviewHistoryList.length}`;
+            } else {
+                if (isLocalFriendMode) {
+                    statusText = game.turn() === 'w' ? "White's Turn (Local)" : "Black's Turn (Local)";
+                } else {
+                    statusText = game.turn() === 'w' ? "Your Turn (White)" : `${activeBot.name} is thinking...`;
+                }
+                if (game.in_check()) statusText += " - CHECK!";
+            }
+            document.getElementById('status').innerHTML = statusText;
+
+            var history = isReviewMode ? reviewHistoryList : game.history();
+            var html = "";
+            for (var i=0; i<history.length; i+=2) {
+                var num = Math.floor(i/2) + 1;
+                var wBadge = (isReviewMode && reviewClassifications[i]) ? reviewClassifications[i] : "";
+                var bBadge = (isReviewMode && reviewClassifications[i+1]) ? reviewClassifications[i+1] : "";
+                var actW = (isReviewMode && reviewCurrentIndex === i) ? 'style="color:#e67e22; font-weight:bold;"' : '';
+                var actB = (isReviewMode && reviewCurrentIndex === i+1) ? 'style="color:#e67e22; font-weight:bold;"' : '';
+
+                html += `<div class="move-row">
+                    <span class="move-number">${num}.</span>
+                    <span ${actW}>${history[i]}${wBadge}</span>
+                    <span ${actB}>${history[i+1] || ""}${bBadge}</span>
+                </div>`;
+            }
+            var container = document.getElementById('move-history');
+            container.innerHTML = html;
+            if (!isReviewMode) { container.scrollTop = container.scrollHeight; }
+        }
+
+        function compileGameSummary() {
+            reviewHistoryList = game.history();
+            var rawMoves = game.history({ verbose: true });
+            var testGame = new Chess();
+            var evals = [0];
+
+            for (var i=0; i<reviewHistoryList.length; i++) {
+                testGame.move(reviewHistoryList[i]);
+                evals.push(minimax(1, -1000000, 1000000, (testGame.turn() === 'w')));
+            }
+
+            stats = { best: 0, good: 0, mistake: 0, blunder: 0 };
+            reviewClassifications = []; reviewReasonings = []; reviewEvaluations = [];
+            var userMoves = 0, userScoreWeight = 0;
+
+            for (var i=0; i<reviewHistoryList.length; i++) {
+                var moveObj = rawMoves[i];
+                var drop = (moveObj.color === 'w') ? (evals[i] - evals[i+1]) : (evals[i+1] - evals[i]);
+
+                var badge = '<span class="badge badge-good">Good</span>';
+                var pro = "Maintains development parameters.";
+                var con = "Misses slightly quicker dynamic center variations.";
+                var moveVal = 70;
+
+                if (drop >= 180) {
+                    badge = '<span class="badge badge-blunder">🔴 Blunder</span>'; stats.blunder++; moveVal = 10;
+                    pro = "Changes material tracking lines.";
+                    con = `Left vital pieces exposed to sudden capture tactics!`;
+                } else if (drop >= 90) {
+                    badge = '<span class="badge badge-mistake">🟠 Mistake</span>'; stats.mistake++; moveVal = 40;
+                    pro = "Pushes lines forward.";
+                    con = "Gives up active structural board pressure.";
+                } else if (drop <= -5) {
+                    badge = '<span class="badge badge-best">✨ Best</span>'; stats.best++; moveVal = 95;
+                    pro = "Highly accurate engine matching choice!";
+                    con = "None.";
+                } else {
+                    stats.good++;
+                }
+
+                reviewClassifications.push(badge);
+                reviewEvaluations.push((evals[i+1]/100).toFixed(2));
+                reviewReasonings.push(`<strong>PRO:</strong> ${pro}<br><span class="con-tip"><strong>CON:</strong> ${con}</span>`);
+
+                if (moveObj.color === 'w') { userMoves++; userScoreWeight += moveVal; }
+            }
+
+            var finalAccuracy = userMoves > 0 ? Math.min(100, Math.max(0, Math.round(userScoreWeight / userMoves))) : 100;
+            var baseRating = isLocalFriendMode ? 1400 : activeBot.elo;
+            var estimatedPerformance = Math.round(baseRating + ((finalAccuracy - 70) * 12));
+
+            document.getElementById('accuracy-val').innerText = finalAccuracy + "%";
+            document.getElementById('elo-val').innerText = estimatedPerformance;
+            document.getElementById('cnt-best').innerText = stats.best;
+            document.getElementById('cnt-good').innerText = stats.good;
+            document.getElementById('cnt-mistake').innerText = stats.mistake;
+            document.getElementById('cnt-blunder').innerText = stats.blunder;
+
+            document.getElementById('gameover-modal').style.display = 'flex';
+        }
+
+        function closeModalAndExit() {
+            document.getElementById('gameover-modal').style.display = 'none';
+            quitActiveMatch();
+        }
+
+        function startReviewFromModal() {
+            document.getElementById('gameover-modal').style.display = 'none';
+            isReviewMode = true;
+            document.getElementById('review-controls').style.display = 'flex';
+            reviewMove(0);
+        }
+
+        function reviewMove(dir) {
+            var target = reviewCurrentIndex + dir;
+            if (target < -1 || target >= reviewHistoryList.length) return;
+            reviewCurrentIndex = target;
+
+            var rGame = new Chess();
+            for (var i=0; i<=reviewCurrentIndex; i++) { rGame.move(reviewHistoryList[i]); }
+            board.position(rGame.fen());
+            playSound(false);
+
+            if (reviewCurrentIndex >= 0) {
+                document.getElementById('review-reasoning').innerHTML = `<strong>Balance Score:</strong> ${reviewEvaluations[reviewCurrentIndex]}<br>${reviewReasonings[reviewCurrentIndex]}`;
+            } else {
+                document.getElementById('review-reasoning').innerHTML = "Starting Position lines. Navigate variations using tracks below.";
+            }
+            updateStatusAndLog();
+        }
+
+        function makeBotMove() {
+            if (game.game_over() || isLocalFriendMode) { updateStatusAndLog(); return; }
+            var moves = game.moves();
+
+            if (Math.random() < activeBot.blunderChance) {
+                moves.sort(() => 0.5 - Math.random());
+                for (var i=0; i<moves.length; i++) {
+                    if (!moves[i].includes('x') && !moves[i].includes('#')) {
+                        var m = game.move(moves[i]);
+                        board.position(game.fen());
+                        playSound(m && m.captured);
+                        updateStatusAndLog();
+                        return;
+                    }
+                }
+            }
+
+            moves.sort(() => 0.5 - Math.random());
+            var bestMove = null;
+            var isBotWhite = game.turn() === 'w';
+            var bestValue = isBotWhite ? -999999 : 999999;
+
+            for (var i=0; i<moves.length; i++) {
+                game.move(moves[i]);
+                var val = minimax(activeBot.depth - 1, -1000000, 1000000, !isBotWhite);
+                game.undo();
+                if (isBotWhite ? (val > bestValue) : (val < bestValue)) { bestValue = val; bestMove = moves[i]; }
+            }
+
+            var details = game.move(bestMove || moves[0]);
+            board.position(game.fen());
+            playSound(details && details.captured);
+            updateStatusAndLog();
+        }
+
+        function onDrop(source, target, piece) {
+            if (isReviewMode) return 'snapback';
+            if (!isLocalFriendMode && (game.turn() !== 'w' || !piece.startsWith('w'))) return 'snapback';
+            
+            var move = game.move({ from: source, to: target, promotion: 'q' });
+            if (move === null) return 'snapback';
+
+            playSound(move.captured || move.flags.includes('e'));
+            updateStatusAndLog();
+
+            window.setTimeout(() => {
+                board.position(game.fen());
+                if (!isLocalFriendMode) { window.setTimeout(makeBotMove, 250); }
+            }, 250);
+        }
+
+        function resetGame() {
+            isReviewMode = false;
+            reviewHistoryList = []; reviewClassifications = []; reviewReasonings = []; reviewEvaluations = [];
+            reviewCurrentIndex = -1;
+            document.getElementById('review-controls').style.style = 'none';
+            document.getElementById('gameover-modal').style.display = 'none';
+            game.reset();
+            board.start();
+            updateStatusAndLog();
+        }
+
+        // Initialize display boards and load database cards
+        window.onload = function() {
+            showcaseBoard = Chessboard('showcase-board', { position: 'start', draggable: false, pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png' });
+            board = Chessboard('my-board', { position: 'start', draggable: true, pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png', onDrop: onDrop });
+            initLobbyGrids();
+        };
+    </script>
+</body>
+</html>
