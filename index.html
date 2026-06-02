@@ -5,27 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Buddy AI</title>
     
-    <!-- Styling library for the chess board squares -->
+    <!-- External styling library used to draw the chess board grid squares -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     
     <style>
-        /* Modern Dark Mode Styling */
+        /* Modern Dark Mode Base Layout */
         body {
             background-color: #121212;
             color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            height: 100vh;
+            align-items: center;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         
-        .container {
+        /* Flexbox wrapper that hosts the Board on the left and the Dashboard on the right */
+        .app-layout {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* Container stacking the Title, Control Panel, and Board vertically */
+        .board-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
             gap: 15px;
         }
 
@@ -33,9 +45,10 @@
             margin: 0;
             font-weight: 600;
             letter-spacing: 0.5px;
+            font-size: 24px;
         }
 
-        /* Status & Control Panel */
+        /* Status Text Container and Restart Button wrapper */
         .panel {
             display: flex;
             justify-content: space-between;
@@ -71,6 +84,7 @@
             background-color: #d35400;
         }
 
+        /* Visual configuration for the graphical board element */
         #my-board {
             width: 400px;
             max-width: 90vw;
@@ -78,36 +92,108 @@
             border-radius: 6px;
             overflow: hidden;
         }
+
+        /* Side Dashboard panel dedicated to logging algebraic chess notations */
+        .sidebar {
+            width: 240px;
+            height: 480px;
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .sidebar-header {
+            background: #252525;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #2a2a2a;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            color: #e67e22;
+        }
+
+        /* Scrollable layout structure inside the live sidebar text element */
+        #move-history {
+            padding: 12px;
+            overflow-y: auto;
+            flex-grow: 1;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #d4d4d4;
+        }
+
+        /* Formatted structural columns for Move Index, White Move, and Black Move */
+        .move-row {
+            display: grid;
+            grid-template-columns: 35px 80px 80px;
+            border-bottom: 1px solid #252525;
+            padding: 4px 0;
+        }
+
+        .move-number {
+            color: #757575;
+        }
+
+        /* CSS Media Query: Automatically stacks sidebar underneath the board layout on mobile screens */
+        @media (max-width: 700px) {
+            .app-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+            .sidebar {
+                width: 400px;
+                max-width: 90vw;
+                height: 150px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Chess Buddy AI</h1>
+    <!-- Main Graphic Framework Wrapper Layout -->
+    <div class="app-layout">
         
-        <!-- New Live Status & Restart Controls -->
-        <div class="panel">
-            <div id="status">Your turn (White)</div>
-            <button id="restart-btn" onclick="resetGame()">Restart</button>
+        <!-- Left Column Dashboard Element -->
+        <div class="board-container">
+            <h1>Chess Buddy AI</h1>
+            <div class="panel">
+                <div id="status">Your turn (White)</div>
+                <button id="restart-btn" onclick="resetGame()">Restart</button>
+            </div>
+            <div id="my-board"></div>
         </div>
 
-        <!-- The Chess Board Container -->
-        <div id="my-board"></div>
+        <!-- Right Column Dashboard Element -->
+        <div class="sidebar">
+            <div class="sidebar-header">Live Move Log</div>
+            <div id="move-history"></div>
+        </div>
     </div>
 
-    <!-- JavaScript libraries -->
+    <!-- Essential script libraries loaded down in body layout to maximize processing speeds -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     
     <script>
-        var game = new Chess();
-        var board = null;
-        var $status = $('#status');
+        // Core Engine Variables
+        var game = new Chess();       // The "Referee" tracking data states and rules logic
+        var board = null;             // The visual board rendering engine
+        var $status = $('#status');   // jQuery variable shortcut caching the Status element
+        var $historyContainer = $('#move-history'); // jQuery shortcut caching the Sidebar container
 
-        // Synthetic Sound Generator (No file uploads required!)
+        /**
+         * Native Browser Audio Synthesizer
+         * Generates custom sound frequencies directly via hardware code without any static media file hosting!
+         */
         function playSound(isCapture) {
             try {
+                // Initialize clean modern audio nodes
                 var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 var osc = audioCtx.createOscillator();
                 var gain = audioCtx.createGain();
@@ -116,45 +202,71 @@
                 gain.connect(audioCtx.destination);
                 
                 if (isCapture) {
-                    // Quick sharp metallic sound for captures
+                    // Capture event profile: Quick, metallic sharp triangle sound block
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(180, audioCtx.currentTime);
                     osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.1);
                     gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
                     gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
-                    osc.start();
+                    osc.start(); 
                     osc.stop(audioCtx.currentTime + 0.1);
                 } else {
-                    // Wood thud sound for normal moves
+                    // Regular move event profile: Soft low-frequency wood block simulation
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(120, audioCtx.currentTime);
                     osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.15);
                     gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
                     gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15);
-                    osc.start();
+                    osc.start(); 
                     osc.stop(audioCtx.currentTime + 0.15);
                 }
-            } catch (e) { console.log("Audio not supported yet"); }
+            } catch (e) { console.log("Audio not supported inside current browser environment"); }
         }
 
-        // Live panel text updater
-        function updateStatus() {
+        /**
+         * Status Updater & Algebraic String Log Encoder
+         * Pulls game logs out of the referee database and formats them as standard HTML markup strings
+         */
+        function updateStatusAndLog() {
             var statusText = '';
             var moveColor = game.turn() === 'b' ? 'Black (AI)' : 'White (You)';
 
+            // 1. Evaluate Rule Penalties / Conditions to rewrite top status message
             if (game.in_checkmate()) {
                 statusText = 'Game Over! ' + moveColor + ' is in checkmate.';
             } else if (game.in_draw()) {
                 statusText = 'Game Over! Draw position.';
             } else {
                 statusText = moveColor + "'s turn";
-                if (game.in_check()) {
-                    statusText += ' - CHECK!';
-                }
+                if (game.in_check()) statusText += ' - CHECK!';
             }
             $status.html(statusText);
+
+            // 2. Map standard algebraic historical move strings into rows
+            var history = game.history();
+            var html = '';
+            
+            for (var i = 0; i < history.length; i += 2) {
+                var moveNum = Math.floor(i / 2) + 1; // Tally turn index groupings
+                var whiteMove = history[i];
+                var blackMove = history[i + 1] ? history[i + 1] : ''; // Fallback string if White made a move but AI hasn't responded yet
+
+                html += '<div class="move-row">' +
+                        '<span class="move-number">' + moveNum + '.</span>' +
+                        '<span>' + whiteMove + '</span>' +
+                        '<span>' + blackMove + '</span>' +
+                        '</div>';
+            }
+            
+            $historyContainer.html(html);
+            // Lock sidebar focus directly down to the lowest element during long games
+            $historyContainer.scrollTop($historyContainer[0].scrollHeight);
         }
 
+        /**
+         * Piece Value Parser
+         * Converts standard piece designators into weight profiles (Positive for White, Negative for Black)
+         */
         function getPieceValue(piece) {
             if (piece === null) return 0;
             var values = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 };
@@ -162,6 +274,10 @@
             return piece.color === 'w' ? value : -value;
         }
 
+        /**
+         * Global Board Total Value Evaluation Loop
+         * Sums up structural balances across all 64 coordinates
+         */
         function evaluateBoard(boardState) {
             var totalEvaluation = 0;
             for (var i = 0; i < 8; i++) {
@@ -172,99 +288,113 @@
             return totalEvaluation;
         }
 
+        /**
+         * Recursive Minimax Tree Search Optimization Model featuring Alpha-Beta Pruning
+         * Allows engine parameters to recursively preview moves, score responses, and break dead calculation branches early
+         */
         function minimax(depth, alpha, beta, isMaximizingPlayer) {
-            if (depth === 0 || game.game_over()) {
-                return evaluateBoard(game.board());
-            }
-
+            // Base Escape Rule Condition: Evaluate score totals when depth limit reaches bottom or match hits game over parameters
+            if (depth === 0 || game.game_over()) return evaluateBoard(game.board());
+            
             var possibleMoves = game.moves();
 
             if (isMaximizingPlayer) {
+                // White Turn simulations: Pursue higher values
                 var bestValue = -99999;
                 for (var i = 0; i < possibleMoves.length; i++) {
                     game.move(possibleMoves[i]);
                     bestValue = Math.max(bestValue, minimax(depth - 1, alpha, beta, false));
                     game.undo();
                     alpha = Math.max(alpha, bestValue);
-                    if (beta <= alpha) break;
+                    if (beta <= alpha) break; // ALPHA-BETA CUT: Prune branches where opponent holds better counter options
                 }
                 return bestValue;
             } else {
+                // Black Turn simulations: Pursue lower negative values
                 var bestValue = 99999;
                 for (var i = 0; i < possibleMoves.length; i++) {
                     game.move(possibleMoves[i]);
                     bestValue = Math.min(bestValue, minimax(depth - 1, alpha, beta, true));
                     game.undo();
                     beta = Math.min(beta, bestValue);
-                    if (beta <= alpha) break;
+                    if (beta <= alpha) break; // ALPHA-BETA CUT: Prune branches where opponent holds better counter options
                 }
                 return bestValue;
             }
         }
 
+        /**
+         * Master Engine Controller Loop
+         * Pulls legal choices, launches deep calculations via minimax algorithm, and updates visual state
+         */
         function makeBestMove() {
             var possibleMoves = game.moves();
+            if (game.game_over()) { updateStatusAndLog(); return; }
 
-            if (game.game_over()) {
-                updateStatus();
-                return;
-            }
-
+            // Shuffle choice queues randomly first so identical positional values don't create predictable tracking setups
             possibleMoves.sort(function() { return 0.5 - Math.random(); });
-
+            
             var bestMove = null;
-            var bestValue = 99999;
+            var bestValue = 99999; // Black wants to minimize score toward negative integers
 
+            // Loop through every single legal choice available immediately right now
             for (var i = 0; i < possibleMoves.length; i++) {
                 var move = possibleMoves[i];
-                game.move(move);
+                game.move(move); // Simulate move state
+                
+                // Track remaining paths down to Depth 2 (Initial immediate turn loop + 2 layer lookahead = Depth 3 total)
                 var boardValue = minimax(2, -100000, 100000, true); 
-                game.undo();
+                game.undo(); // Roll back calculation state simulation
 
+                // Track the move that yields the lowest score (most advantageous value structure for Black)
                 if (boardValue < bestValue) {
                     bestValue = boardValue;
                     bestMove = move;
                 }
             }
 
-            // Check if the AI's move is a capture right before making it
+            // Preview-step verification module tracking if AI's absolute best selected move choice involves an item capture event
             var testGame = new Chess(game.fen());
             var moveDetails = testGame.move(bestMove);
             var isCapture = moveDetails && (moveDetails.captured || moveDetails.flags.includes('e'));
 
+            // Play the chosen move
             game.move(bestMove);
             board.position(game.fen());
             playSound(isCapture);
-            updateStatus();
+            updateStatusAndLog();
         }
 
+        /**
+         * Event Trigger handler launched by Chessboard.js whenever an user drags and releases an item on screen
+         */
         function onDrop (source, target, piece, newPos, oldPos, orientation) {
-            var move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q' 
-            });
+            // Verify structural legality parameters inside the data engine
+            var move = game.move({ from: source, to: target, promotion: 'q' });
+            if (move === null) return 'snapback'; // Bounce piece back automatically if move breaks tracking rules
 
-            if (move === null) return 'snapback';
-
-            // Play player move audio
+            // Track if player move captures an opponent asset (normal capture flag or 'e' for en passant captures)
             var isCapture = move.captured || move.flags.includes('e');
             playSound(isCapture);
-            updateStatus();
+            updateStatusAndLog();
 
+            // Wait brief animation ticks before rendering graphic layout updates and triggering AI processing models
             window.setTimeout(function() {
                 board.position(game.fen());
                 window.setTimeout(makeBestMove, 250);
             }, 250);
         }
 
-        // Restart Game Action
+        /**
+         * Wipe Board Reset Action
+         */
         function resetGame() {
             game.reset();
             board.start();
-            updateStatus();
+            updateStatusAndLog();
         }
 
+        // Master Graphic Config Variable Initializations
         var config = {
             position: 'start',
             draggable: true,
@@ -272,8 +402,9 @@
             onDrop: onDrop 
         };
         
+        // Spawn the interactive system engine block
         board = Chessboard('my-board', config);
-        updateStatus();
+        updateStatusAndLog();
     </script>
 </body>
 </html>
