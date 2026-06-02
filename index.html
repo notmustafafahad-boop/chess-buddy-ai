@@ -3,18 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Buddy AI - 25 Bot Character Edition</title>
+    <title>Chess Buddy AI - Premium Green & Black Edition</title>
     
-    <!-- Ultra-Reliable CDN links to prevent loading glitches -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     
     <style>
+        :root {
+            --chess-green: #81b64c;
+            --chess-green-hover: #6a993c;
+            --dark-bg: #121212;
+            --panel-bg: #1e1e1e;
+            --card-bg: #252525;
+            --border-color: #2a2a2a;
+            --text-main: #ffffff;
+            --text-muted: #bababa;
+        }
+
         body {
-            background-color: #121212;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             box-sizing: border-box;
             min-height: 100vh;
             display: flex;
@@ -22,26 +32,179 @@
             align-items: center;
         }
 
-        /* SCREEN FLOW SYSTEM */
-        .screen { display: none; width: 100%; max-width: 1100px; }
-        .screen.active { display: flex; }
+        /* SCREEN MULTIPLEXER FLOW SYSTEM */
+        .screen { display: none; width: 100%; padding: 20px; box-sizing: border-box; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; }
 
-        /* LOBBY INTERFACE */
-        .lobby-container {
-            flex-direction: column;
-            gap: 25px;
+        /* ==========================================
+           SCREEN 1: MODERN HOME/LANDING PAGE STYLES
+           ========================================== */
+        .home-container {
+            max-width: 1000px;
             width: 100%;
+            text-align: center;
+            gap: 30px;
+        }
+
+        .navbar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 40px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--chess-green);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-auth-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-nav {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid #444;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-nav.primary {
+            background: var(--chess-green);
+            border-color: var(--chess-green);
+        }
+
+        .btn-nav:hover {
+            border-color: var(--chess-green);
+            transform: translateY(-1px);
+        }
+
+        .hero-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            text-align: left;
+            margin-bottom: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section { grid-template-columns: 1fr; text-align: center; }
+            .hero-actions { justify-content: center; }
+        }
+
+        .hero-title {
+            font-size: 46px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin: 0 0 15px 0;
+        }
+
+        .hero-title span {
+            color: var(--chess-green);
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin: 0 0 30px 0;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .main-cta {
+            background: var(--chess-green);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(129, 182, 76, 0.3);
+            transition: all 0.2s;
+        }
+
+        .main-cta:hover {
+            background: var(--chess-green-hover);
+            transform: translateY(-2px);
+        }
+
+        .secondary-cta {
+            background: #252525;
+            color: white;
+            border: 1px solid #3d3d3d;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .secondary-cta:hover {
+            background: #333;
+            border-color: #555;
+            transform: translateY(-2px);
+        }
+
+        .hero-graphic {
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .showcase-icon {
+            font-size: 120px;
+            animation: bounce 3s infinite ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        /* ==========================================
+           SCREEN 2: BOT SELECT LOBBY STYLES
+           ========================================== */
+        .lobby-container {
+            max-width: 1100px;
+            width: 100%;
+            gap: 25px;
         }
 
         .rank-section {
-            background: #1e1e1e;
-            border: 1px solid #2a2a2a;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .rank-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             margin-bottom: 15px;
             letter-spacing: 0.5px;
@@ -57,7 +220,7 @@
         }
 
         .bot-card {
-            background: #252525;
+            background: var(--card-bg);
             border: 1px solid #333;
             border-radius: 6px;
             padding: 15px;
@@ -68,38 +231,39 @@
 
         .bot-card:hover {
             transform: translateY(-3px);
-            border-color: #81b64c;
+            border-color: var(--chess-green);
         }
 
-        .bot-avatar {
-            font-size: 36px;
-            margin-bottom: 8px;
-        }
-
+        .bot-avatar { font-size: 36px; margin-bottom: 8px; }
         .bot-name { font-weight: bold; font-size: 15px; }
-        .bot-elo { font-size: 12px; color: #81b64c; font-weight: bold; margin-top: 2px; }
+        .bot-elo { font-size: 12px; color: var(--chess-green); font-weight: bold; margin-top: 2px; }
         .bot-desc { font-size: 11px; color: #888; margin-top: 6px; line-height: 1.3; }
 
-        /* MAIN GAME ARENA AREA */
+        /* ==========================================
+           SCREEN 3: ACTIVE PLAYING ARENA STYLES
+           ========================================== */
         .app-layout {
-            flex-direction: row;
+            flex-direction: row !important;
             gap: 20px;
             justify-content: center;
             align-items: flex-start;
+            max-width: 1100px;
             width: 100%;
         }
 
         .board-container { display: flex; flex-direction: column; gap: 15px; }
+        
         .panel {
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 400px;
             max-width: 90vw;
-            background: #1e1e1e;
+            background: var(--panel-bg);
             padding: 10px 15px;
             border-radius: 6px;
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
         }
 
         #my-board {
@@ -113,8 +277,8 @@
         .sidebar {
             width: 360px;
             height: 520px;
-            background: #1e1e1e;
-            border: 1px solid #2a2a2a;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             display: flex;
             flex-direction: column;
@@ -125,7 +289,7 @@
             padding: 12px;
             font-weight: 600;
             font-size: 14px;
-            border-bottom: 1px solid #2a2a2a;
+            border-bottom: 1px solid var(--border-color);
             color: #e67e22;
         }
 
@@ -142,91 +306,170 @@
         .move-number { color: #757575; }
 
         .badge { display: inline-block; font-size: 10px; padding: 1px 5px; border-radius: 3px; margin-left: 5px; font-weight: bold; text-transform: uppercase; }
-        .badge-brilliant { background: #1baca2; color: #fff; }
-        .badge-best { background: #81b64c; color: #fff; }
+        .badge-best { background: var(--chess-green); color: #fff; }
         .badge-good { background: #4e702e; color: #ccc; }
-        .badge-inaccuracy { background: #f7c04a; color: #333; }
         .badge-mistake { background: #e67e22; color: #fff; }
         .badge-blunder { background: #b43c3c; color: #fff; }
 
-        .review-panel { display: none; background: #252525; padding: 12px; border-top: 1px solid #2a2a2a; flex-direction: column; gap: 10px; }
+        .review-panel { display: none; background: #252525; padding: 12px; border-top: 1px solid var(--border-color); flex-direction: column; gap: 10px; }
         .review-buttons { display: flex; justify-content: space-between; gap: 10px; }
         .review-btn { background: #333; color: #fff; border: 1px solid #444; padding: 10px; flex: 1; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
         #review-reasoning { background: #1a1a1a; border: 1px solid #2d2d2d; padding: 10px; border-radius: 4px; font-size: 12px; color: #b3b3b3; line-height: 1.5; }
         .con-tip { color: #e67e22; display: block; margin-top: 4px; }
 
-        /* POST-GAME ANALYSIS POPUP OVERLAY */
+        /* ==========================================
+           MODALS & OVERLAYS SYSTEM STYLES
+           ========================================== */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center;
         }
-        .modal-card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; width: 420px; max-width: 90vw; padding: 24px; text-align: center; }
+        
+        /* Auth Modal Specifics */
+        .auth-card {
+            background: var(--panel-bg);
+            border: 1px solid #333;
+            border-radius: 8px;
+            width: 380px;
+            max-width: 90vw;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #2b2b2b;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .auth-input:focus { border-color: var(--chess-green); }
+
+        .sso-btn {
+            width: 100%;
+            padding: 12px;
+            margin: 6px 0;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: white;
+            color: #222;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .sso-btn.apple { background: #000; color: white; border: none; }
+
+        .divider {
+            margin: 15px 0;
+            color: #666;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #333; }
+
+        /* Game Over Modal Card */
+        .modal-card { background: var(--panel-bg); border: 1px solid #333; border-radius: 8px; width: 420px; max-width: 90vw; padding: 24px; text-align: center; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
-        .stat-box { background: #252525; padding: 12px; border-radius: 6px; border: 1px solid #2a2a2a; }
-        .stat-val { font-size: 24px; font-weight: bold; color: #81b64c; }
+        .stat-box { background: var(--card-bg); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .stat-val { font-size: 24px; font-weight: bold; color: var(--chess-green); }
         .stat-lbl { font-size: 11px; color: #888; text-transform: uppercase; }
         .card-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid #252525; }
         .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
         .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .btn-primary { background: #81b64c; color: white; }
+        .btn-primary { background: var(--chess-green); color: white; }
         .btn-secondary { background: #333; color: #aaa; }
 
-        #leave-btn { background: #333; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        #leave-btn, #home-btn { background: #333; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 
         @media (max-width: 700px) {
-            .app-layout { flex-direction: column; align-items: center; }
+            .app-layout { flex-direction: column !important; align-items: center; }
             .sidebar { width: 400px; max-width: 90vw; height: 320px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- SCREEN 1: BOT SELECT LOBBY -->
-    <div class="screen active lobby-container" id="lobby-screen">
-        <h1 style="text-align: center; color: #81b64c;">Select Your Chess Opponent</h1>
+    <div class="screen active home-container" id="home-screen">
+        <div class="navbar">
+            <div class="logo-text">♟️ CHESSBUDDY</div>
+            <div class="nav-auth-buttons">
+                <button class="btn-nav" onclick="openAuthModal('login')">Log In</button>
+                <button class="btn-nav primary" onclick="openAuthModal('signup')">Sign Up</button>
+            </div>
+        </div>
+
+        <div class="hero-section">
+            <div>
+                <h1 class="hero-title">Elevate Your Chess Game against <span>Adaptive AI</span></h1>
+                <p class="hero-subtitle">Welcome to the ultimate digital tactical arena. Battle 25 custom-calibrated bot personalities across 5 tiers of mastery, or challenge friends locally with a native analysis breakdown.</p>
+                <div class="hero-actions">
+                    <button class="main-cta" onclick="switchScreen('lobby-screen')">Play vs AI Bots</button>
+                    <button class="secondary-cta" onclick="startLocalPassAndPlay()">Play Local Friend</button>
+                </div>
+            </div>
+            <div class="hero-graphic">
+                <div class="showcase-icon">👑</div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="screen lobby-container" id="lobby-screen">
+        <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+            <button id="home-btn" onclick="switchScreen('home-screen')">◀ Return Home</button>
+            <h1 style="margin:0; color: var(--chess-green);">Select Your Opponent</h1>
+            <div style="width:90px;"></div>
+        </div>
         
-        <!-- Rank: Beginners -->
         <div class="rank-section">
             <div class="rank-title" style="color: #5cacf7;">👶 Rank: Beginners (Elo 600 - 1050)</div>
             <div class="bot-grid" id="grid-beginner"></div>
         </div>
 
-        <!-- Rank: Intermediates -->
         <div class="rank-section">
-            <div class="rank-title" style="color: #81b64c;">🟢 Rank: Intermediates (Elo 1150 - 1550)</div>
+            <div class="rank-title" style="color: var(--chess-green);">🟢 Rank: Intermediates (Elo 1150 - 1550)</div>
             <div class="bot-grid" id="grid-intermediate"></div>
         </div>
 
-        <!-- Rank: Experts -->
         <div class="rank-section">
             <div class="rank-title" style="color: #f7c04a;">📐 Rank: Experts (Elo 1650 - 2050)</div>
             <div class="bot-grid" id="grid-expert"></div>
         </div>
 
-        <!-- Rank: Grandmasters -->
         <div class="rank-section">
             <div class="rank-title" style="color: #e67e22;">👑 Rank: Grandmasters (Elo 2150 - 2550)</div>
             <div class="bot-grid" id="grid-gm"></div>
         </div>
 
-        <!-- Rank: Super GMs -->
         <div class="rank-section">
             <div class="rank-title" style="color: #b43c3c;">🌋 Rank: Super GMs (Elo 2650 - 3100)</div>
             <div class="bot-grid" id="grid-supergm"></div>
         </div>
     </div>
 
-    <!-- SCREEN 2: ACTIVE PLAYING ARENA -->
+
     <div class="screen app-layout" id="game-screen">
         <div class="board-container">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 id="matchup-header" style="margin:0; font-size:18px;">Playing vs Bot</h2>
-                <button id="leave-btn" onclick="goToLobby()">◀ Quit to Lobby</button>
+                <h2 id="matchup-header" style="margin:0; font-size:18px;">Playing Match</h2>
+                <button id="leave-btn" onclick="quitActiveMatch()">◀ Exit Match</button>
             </div>
             <div class="panel">
-                <div id="status">Your turn</div>
-                <button id="restart-btn" style="background:#e67e22; border:none; color:white; padding:6px 12px; border-radius:4px; cursor:pointer;" onclick="resetGame()">Restart</button>
+                <div id="status">White to move</div>
+                <button id="restart-btn" onclick="resetGame()">Restart</button>
             </div>
             <div id="my-board"></div>
         </div>
@@ -236,7 +479,7 @@
             <div id="move-history"></div>
             
             <div class="review-panel" id="review-controls">
-                <div id="review-reasoning">Use buttons below to explore alternative move variations.</div>
+                <div id="review-reasoning">Use control tracks to analyze alternative move profiles.</div>
                 <div class="review-buttons">
                     <button class="review-btn" onclick="reviewMove(-1)">◀ Prev</button>
                     <button class="review-btn" onclick="reviewMove(1)">Next ▶</button>
@@ -245,11 +488,37 @@
         </div>
     </div>
 
-    <!-- POST GAME SCREEN MODAL OVERLAY -->
+
+    <div class="modal-overlay" id="auth-modal" onclick="closeAuthModal(event)">
+        <div class="auth-card" onclick="event.stopPropagation()">
+            <h2 id="auth-title" style="margin-top:0; color:var(--chess-green);">Access Account</h2>
+            <p id="auth-desc" style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Synchronize profiles & performance history.</p>
+            
+            <button class="sso-btn" onclick="mockAuthSuccess('Google')">
+                <img src="https://cdnjs.cloudflare.com/ajax/libs/gapi-javascript-client/1.1.0/assets/logo.png" style="width:16px; display:none;" alt="">
+                Continue with Google
+            </button>
+            <button class="sso-btn apple" onclick="mockAuthSuccess('Apple')">
+                Continue with Apple
+            </button>
+
+            <div class="divider">or secure email credentials</div>
+
+            <input type="email" class="auth-input" placeholder="Email Address">
+            <input type="password" class="auth-input" placeholder="Security Password">
+
+            <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" id="auth-submit-btn" onclick="mockAuthSuccess('Credentials')">
+                Authenticate
+            </button>
+            <button class="btn-nav" style="border:none; margin-top:10px; font-size:12px; color:var(--text-muted);" onclick="closeAuthModal(null)">Cancel</button>
+        </div>
+    </div>
+
+
     <div class="modal-overlay" id="gameover-modal">
         <div class="modal-card">
             <h2 style="margin-top:0; color:#e67e22;">Game Finished!</h2>
-            <p style="font-size:13px; color:#aaa; margin-bottom:15px;">Your comprehensive Chess.com accuracy scorecard is calculated below.</p>
+            <p style="font-size:13px; color:#aaa; margin-bottom:15px;">Your chess analytics performance scorecard is compiled below.</p>
             
             <div class="stat-grid">
                 <div class="stat-box">
@@ -258,27 +527,24 @@
                 </div>
                 <div class="stat-box">
                     <div class="stat-val" id="elo-val" style="color:#e67e22;">1200</div>
-                    <div class="stat-lbl">Estimated Performance</div>
+                    <div class="stat-lbl">Performance ELO</div>
                 </div>
             </div>
 
             <div style="background:#252525; padding:10px; border-radius:6px; margin-bottom:15px; border:1px solid #2a2a2a; text-align:left;">
-                <div class="card-row"><span>⭐ Brilliant Moves:</span><strong id="cnt-brilliant" style="color:#1baca2;">0</strong></div>
-                <div class="card-row"><span>✨ Best Selections:</span><strong id="cnt-best" style="color:#81b64c;">0</strong></div>
-                <div class="card-row"><span>🟢 Solid Actions:</span><strong id="cnt-good" style="color:#4e702e;">0</strong></div>
-                <div class="card-row"><span>🟡 Inaccuracies:</span><strong id="cnt-inaccuracy" style="color:#f7c04a;">0</strong></div>
-                <div class="card-row"><span>🟠 Position Mistakes:</span><strong id="cnt-mistake" style="color:#e67e22;">0</strong></div>
+                <div class="card-row"><span>✨ Best Selections:</span><strong id="cnt-best" style="color:var(--chess-green);">0</strong></div>
+                <div class="card-row"><span>🟢 Solid Moves:</span><strong id="cnt-good" style="color:#4e702e;">0</strong></div>
+                <div class="card-row"><span>🟠 Inaccuracies / Mistakes:</span><strong id="cnt-mistake" style="color:#e67e22;">0</strong></div>
                 <div class="card-row"><span>🔴 Critical Blunders:</span><strong id="cnt-blunder" style="color:#b43c3c;">0</strong></div>
             </div>
 
             <div class="modal-actions">
-                <button class="modal-btn btn-secondary" onclick="closeModalAndExit()">Skip Review</button>
-                <button class="modal-btn btn-primary" onclick="startReviewFromModal()">Review Game</button>
+                <button class="modal-btn btn-secondary" onclick="closeModalAndExit()">Back to Lobby</button>
+                <button class="modal-btn btn-primary" onclick="startReviewFromModal()">Review Match</button>
             </div>
         </div>
     </div>
 
-    <!-- Safe, Reliable External Chess Engines Delivery Logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
@@ -286,7 +552,8 @@
     <script>
         var game = new Chess();
         var board = null;
-        var activeBot = null;
+        var activeBot = null; 
+        var isLocalFriendMode = false; 
 
         var isReviewMode = false;
         var reviewHistoryList = [];
@@ -294,9 +561,8 @@
         var reviewClassifications = [];
         var reviewReasonings = [];
         var reviewCurrentIndex = -1;
-        var stats = { brilliant: 0, best: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0 };
+        var stats = { best: 0, good: 0, mistake: 0, blunder: 0 };
 
-        // Full 25-Bot Database System Configuration Map
         const botDatabase = {
             beginner: [
                 { id: "b1", name: "Toddler Timmy", elo: 600, avatar: "👶", desc: "Plays instantly, gets distracted easily, and frequently leaves pieces hanging.", blunderChance: 0.35, depth: 1, dynamicPos: false },
@@ -335,339 +601,7 @@
             ]
         };
 
-        // Positional matrix arrays
+        // Positional coordinate square matrices
         var pawnEval = [
             [0,0,0,0,0,0,0,0],[5,5,5,5,5,5,5,5],[1,1,2,3,3,2,1,1],[0.5,0.5,1,2.5,2.5,1,0.5,0.5],
-            [0,0,0,2,2,0,0,0],[0.5,-0.5,-1,0,0,-1,-0.5,0.5],[0.5,1,1,-2,-2,1,1,0.5],[0,0,0,0,0,0,0,0]
-        ];
-        var knightEval = [
-            [-5,-4,-3,-3,-3,-3,-4,-5],[-4,-2,0,0,0,0,-2,-4],[-3,0,1,1.5,1.5,1,0,-3],[-3,0.5,1.5,2,2,1.5,0.5,-3],
-            [-3,0,1.5,2,2,1.5,0,-3],[-3,0.5,1,1.5,1.5,1,0.5,-3],[-4,-2,0,0.5,0.5,0,-2,-4],[-5,-4,-3,-3,-3,-3,-4,-5]
-        ];
-        var bishopEval = [
-            [-2,-1,-1,-1,-1,-1,-1,-2],[-1,0,0,0,0,0,0,-1],[-1,0,0.5,1,1,0.5,0,-1],[-1,0.5,0.5,1,1,0.5,0.5,-1],
-            [-1,0,1,1,1,1,0,-1],[-1,1,1,1,1,1,1,-1],[-1,0.5,0,0,0,0,0.5,-1],[-2,-1,-1,-1,-1,-1,-1,-2]
-        ];
-        var rookEval = [
-            [0,0,0,0,0,0,0,0],[0.5,1,1,1,1,1,1,0.5],[-0.5,0,0,0,0,0,0,-0.5],[-0.5,0,0,0,0,0,0,-0.5],
-            [-0.5,0,0,0,0,0,0,-0.5],[-0.5,0,0,0,0,0,0,-0.5],[-0.5,0,0,0,0,0,0,-0.5],[0,0,0,0.5,0.5,0,0,0]
-        ];
-        var evalQueen = [
-            [-2,-1,-1,-0.5,-0.5,-1,-1,-2],[-1,0,0,0,0,0,0,-1],[-1,0,0.5,0.5,0.5,0.5,0,-1],[-0.5,0,0.5,0.5,0.5,0.5,0,-0.5],
-            [0,0,0.5,0.5,0.5,0.5,0,-0.5],[-1,0.5,0.5,0.5,0.5,0.5,0,-1],[-1,0,0.5,0,0,0,0,-1],[-2,-1,-1,-0.5,-0.5,-1,-1,-2]
-        ];
-        var kingEval = [
-            [-3,-4,-4,-5,-5,-4,-4,-3],[-3,-4,-4,-5,-5,-4,-4,-3],[-3,-4,-4,-5,-5,-4,-4,-3],[-3,-4,-4,-5,-5,-4,-4,-3],
-            [-2,-3,-3,-4,-4,-3,-3,-2],[-1,-2,-2,-2,-2,-2,-2,-1],[2,2,0,0,0,0,2,2],[2,3,1,0,0,1,3,2]
-        ];
-
-        // Build HTML dashboard lobby grids dynamically
-        function initLobby() {
-            Object.keys(botDatabase).forEach(rankKey => {
-                var container = document.getElementById("grid-" + rankKey);
-                container.innerHTML = "";
-                botDatabase[rankKey].forEach(bot => {
-                    var card = document.createElement("div");
-                    card.className = "bot-card";
-                    card.onclick = () => selectBot(bot);
-                    card.innerHTML = `
-                        <div class="bot-avatar">${bot.avatar}</div>
-                        <div class="bot-name">${bot.name}</div>
-                        <div class="bot-elo">${bot.elo} ELO</div>
-                        <div class="bot-desc">${bot.desc}</div>
-                    `;
-                    container.appendChild(card);
-                });
-            });
-        }
-
-        function selectBot(botObj) {
-            activeBot = botObj;
-            document.getElementById("lobby-screen").classList.remove("active");
-            document.getElementById("game-screen").classList.add("active");
-            document.getElementById("matchup-header").innerText = `Match vs ${activeBot.avatar} ${activeBot.name} (${activeBot.elo})`;
-            resetGame();
-        }
-
-        function goToLobby() {
-            isReviewMode = false;
-            document.getElementById("game-screen").classList.remove("active");
-            document.getElementById("lobby-screen").classList.add("active");
-        }
-
-        function playSound(isCapture) {
-            try {
-                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                var osc = audioCtx.createOscillator();
-                var gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.frequency.setValueAtTime(isCapture ? 170 : 120, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(isCapture ? 70 : 50, audioCtx.currentTime + 0.12);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.12);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.12);
-            } catch(e){}
-        }
-
-        function getPieceValue(piece, x, y, dynamicPos) {
-            if (piece === null) return 0;
-            var values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-            var score = values[piece.type];
-            if (dynamicPos) {
-                if (piece.type === 'p') score += (piece.color === 'w' ? pawnEval[x][y] : pawnEval[7-x][y]) * 10;
-                if (piece.type === 'n') score += knightEval[x][y] * 10;
-                if (piece.type === 'b') score += bishopEval[x][y] * 10;
-                if (piece.type === 'r') score += rookEval[x][y] * 10;
-                if (piece.type === 'q') score += evalQueen[x][y] * 10;
-                if (piece.type === 'k') score += kingEval[x][y] * 10;
-            }
-            return piece.color === 'w' ? score : -score;
-        }
-
-        function evaluateBoard(boardState, dynamicPos) {
-            var score = 0;
-            for (var i=0; i<8; i++) {
-                for (var j=0; j<8; j++) { score += getPieceValue(boardState[i][j], i, j, dynamicPos); }
-            }
-            return score;
-        }
-
-        function minimax(depth, alpha, beta, isMax, dynamicPos) {
-            if (depth === 0 || game.game_over()) return evaluateBoard(game.board(), dynamicPos);
-            var possibleMoves = game.moves();
-            if (isMax) {
-                var best = -999999;
-                for (var i=0; i<possibleMoves.length; i++) {
-                    game.move(possibleMoves[i]);
-                    best = Math.max(best, minimax(depth-1, alpha, beta, false, dynamicPos));
-                    game.undo(); alpha = Math.max(alpha, best); if (beta <= alpha) break;
-                }
-                return best;
-            } else {
-                var best = 999999;
-                for (var i=0; i<possibleMoves.length; i++) {
-                    game.move(possibleMoves[i]);
-                    best = Math.min(best, minimax(depth-1, alpha, beta, true, dynamicPos));
-                    game.undo(); beta = Math.min(beta, best); if (beta <= alpha) break;
-                }
-                return best;
-            }
-        }
-
-        function isSquareAttacked(chessInstance, square, opponentColor) {
-            var fen = chessInstance.fen();
-            var tokens = fen.split(' ');
-            tokens[1] = opponentColor;
-            var testGame = new Chess(tokens.join(' '));
-            var moves = testGame.moves({ verbose: true });
-            for (var i=0; i<moves.length; i++) { if (moves[i].to === square) return true; }
-            return false;
-        }
-
-        function updateStatusAndLog() {
-            var statusText = "";
-            if (game.game_over() && !isReviewMode) {
-                statusText = "Game Complete! Analytics running...";
-                setTimeout(compileGameSummary, 600);
-            } else if (isReviewMode) {
-                statusText = `Reviewing Move ${reviewCurrentIndex + 1} / ${reviewHistoryList.length}`;
-            } else {
-                statusText = game.turn() === 'w' ? "Your Turn (White)" : `${activeBot.name} is thinking...`;
-                if (game.in_check()) statusText += " - CHECK!";
-            }
-            $('#status').html(statusText);
-
-            var history = isReviewMode ? reviewHistoryList : game.history();
-            var html = "";
-            for (var i=0; i<history.length; i+=2) {
-                var num = Math.floor(i/2) + 1;
-                var wBadge = (isReviewMode && reviewClassifications[i]) ? reviewClassifications[i] : "";
-                var bBadge = (isReviewMode && reviewClassifications[i+1]) ? reviewClassifications[i+1] : "";
-                var actW = (isReviewMode && reviewCurrentIndex === i) ? 'style="color:#e67e22; font-weight:bold;"' : '';
-                var actB = (isReviewMode && reviewCurrentIndex === i+1) ? 'style="color:#e67e22; font-weight:bold;"' : '';
-
-                html += `<div class="move-row">
-                    <span class="move-number">${num}.</span>
-                    <span ${actW}>${history[i]}${wBadge}</span>
-                    <span ${actB}>${history[i+1] || ""}${bBadge}</span>
-                </div>`;
-            }
-            $historyContainer.html(html);
-            if (!isReviewMode) { $historyContainer.scrollTop($historyContainer[0].scrollHeight); }
-        }
-
-        function compileGameSummary() {
-            reviewHistoryList = game.history();
-            var rawMoves = game.history({ verbose: true });
-            var testGame = new Chess();
-            var evals = [0];
-
-            for (var i=0; i<reviewHistoryList.length; i++) {
-                testGame.move(reviewHistoryList[i]);
-                evals.push(minimax(2, -1000000, 1000000, (testGame.turn() === 'w'), true));
-            }
-
-            stats = { brilliant: 0, best: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0 };
-            reviewClassifications = []; reviewReasonings = []; reviewEvaluations = [];
-            
-            var userMoves = 0, userScoreWeight = 0;
-            var trackerGame = new Chess();
-
-            for (var i=0; i<reviewHistoryList.length; i++) {
-                var moveObj = rawMoves[i];
-                var drop = (moveObj.color === 'w') ? (evals[i] - evals[i+1]) : (evals[i+1] - evals[i]);
-                
-                trackerGame.move(reviewHistoryList[i]);
-                var hungPiece = isSquareAttacked(trackerGame, moveObj.to, moveObj.color === 'w' ? 'b' : 'w');
-                var isHighValue = ['q','r','b','n'].includes(moveObj.piece);
-
-                var badge = '<span class="badge badge-good">Good</span>';
-                var pro = "Maintains functional balance.";
-                var con = "Misses slightly quicker dynamic options.";
-                var moveVal = 75;
-
-                if (drop >= 220 || (hungPiece && isHighValue && !moveObj.captured)) {
-                    badge = '<span class="badge badge-blunder">🔴 Blunder</span>'; stats.blunder++; moveVal = 10;
-                    pro = "Alters configuration lines.";
-                    con = moveObj.piece === 'q' ? "CRITICAL BLUNDER! Left the Queen wide open to be captured completely for free!" : `Blunder! Hung your unprotected ${moveObj.piece.toUpperCase()} directly in harm's way.`;
-                } else if (drop >= 110) {
-                    badge = '<span class="badge badge-mistake">🟠 Mistake</span>'; stats.mistake++; moveVal = 35;
-                    pro = "Attempts a forward deployment push.";
-                    con = "Position Mistake. Hands control assets back over to your opponent.";
-                } else if (drop >= 50) {
-                    badge = '<span class="badge badge-inaccuracy">🟡 Inaccuracy</span>'; stats.inaccuracy++; moveVal = 55;
-                    pro = "Repositions operational pieces.";
-                    con = "Inaccuracy. Passive line execution that dilutes immediate center file pressure.";
-                } else if (drop <= -15) {
-                    badge = '<span class="badge badge-best">✨ Best Move</span>'; stats.best++; moveVal = 95;
-                    pro = "Absolute optimal engine selection line! Secures center files and keys defenses.";
-                    con = "None. A perfectly clean positional continuation.";
-                }
-
-                reviewClassifications.push(badge);
-                reviewEvaluations.push((evals[i+1]/100).toFixed(2));
-                reviewReasonings.push(`<strong>PRO:</strong> ${pro}<br><span class="con-tip"><strong>CON:</strong> ${con}</span>`);
-
-                if (moveObj.color === 'w') { userMoves++; userScoreWeight += moveVal; }
-            }
-
-            var finalAccuracy = userMoves > 0 ? Math.min(100, Math.max(0, Math.round(userScoreWeight / userMoves))) : 100;
-            var estimatedPerformance = Math.round(activeBot.elo + ((finalAccuracy - 70) * 12));
-
-            $('#accuracy-val').text(finalAccuracy + "%");
-            $('#elo-val').text(estimatedPerformance);
-            $('#cnt-brilliant').text(stats.brilliant);
-            $('#cnt-best').text(stats.best);
-            $('#cnt-good').text(stats.good);
-            $('#cnt-inaccuracy').text(stats.inaccuracy);
-            $('#cnt-mistake').text(stats.mistake);
-            $('#cnt-blunder').text(stats.blunder);
-
-            $('#gameover-modal').css('display', 'flex');
-        }
-
-        function closeModalAndExit() {
-            $('#gameover-modal').css('display', 'none');
-            goToLobby();
-        }
-
-        function startReviewFromModal() {
-            $('#gameover-modal').css('display', 'none');
-            isReviewMode = true;
-            $('#review-controls').css('display', 'flex');
-            reviewMove(0);
-        }
-
-        function reviewMove(dir) {
-            var target = reviewCurrentIndex + dir;
-            if (target < -1 || target >= reviewHistoryList.length) return;
-            reviewCurrentIndex = target;
-
-            var rGame = new Chess();
-            for (var i=0; i<=reviewCurrentIndex; i++) { rGame.move(reviewHistoryList[i]); }
-            board.position(rGame.fen());
-            playSound(false);
-
-            if (reviewCurrentIndex >= 0) {
-                $('#review-reasoning').html(`<strong>Score Balance:</strong> ${reviewEvaluations[reviewCurrentIndex]}<br>${reviewReasonings[reviewCurrentIndex]}`);
-            } else {
-                $('#review-reasoning').html("Starting Position. Use controls to review the match variations.");
-            }
-            updateStatusAndLog();
-        }
-
-        function makeBotMove() {
-            if (game.game_over()) { updateStatusAndLog(); return; }
-            var moves = game.moves();
-
-            // REALISTIC BLUNDER PROBABILITY ENGINE CHECKS
-            if (Math.random() < activeBot.blunderChance) {
-                moves.sort(() => 0.5 - Math.random());
-                for (var i=0; i<moves.length; i++) {
-                    if (!moves[i].includes('x') && !moves[i].includes('#')) {
-                        var m = game.move(moves[i]);
-                        board.position(game.fen());
-                        playSound(m && m.captured);
-                        updateStatusAndLog();
-                        return;
-                    }
-                }
-            }
-
-            // Standard Minimax calculations using custom Bot Depth Profiles
-            moves.sort(() => 0.5 - Math.random());
-            var bestMove = null;
-            var isBotWhite = game.turn() === 'w';
-            var bestValue = isBotWhite ? -999999 : 999999;
-
-            for (var i=0; i<moves.length; i++) {
-                game.move(moves[i]);
-                var val = minimax(activeBot.depth - 1, -1000000, 1000000, !isBotWhite, activeBot.dynamicPos);
-                game.undo();
-                if (isBotWhite ? (val > bestValue) : (val < bestValue)) { bestValue = val; bestMove = moves[i]; }
-            }
-
-            var details = game.move(bestMove || moves[0]);
-            board.position(game.fen());
-            playSound(details && details.captured);
-            updateStatusAndLog();
-        }
-
-        function onDrop(source, target, piece) {
-            if (isReviewMode || game.turn() !== 'w' || !piece.startsWith('w')) return 'snapback';
-            
-            var move = game.move({ from: source, to: target, promotion: 'q' });
-            if (move === null) return 'snapback';
-
-            playSound(move.captured || move.flags.includes('e'));
-            updateStatusAndLog();
-
-            window.setTimeout(() => {
-                board.position(game.fen());
-                window.setTimeout(makeBotMove, 250);
-            }, 250);
-        }
-
-        function resetGame() {
-            isReviewMode = false;
-            reviewHistoryList = []; reviewClassifications = []; reviewReasonings = []; reviewEvaluations = [];
-            reviewCurrentIndex = -1;
-            $('#review-controls').css('display', 'none');
-            $('#gameover-modal').css('display', 'none');
-            game.reset();
-            board.start();
-            updateStatusAndLog();
-        }
-
-        var $historyContainer = $('#move-history');
-        board = Chessboard('my-board', {
-            position: 'start',
-            draggable: true,
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-            onDrop: onDrop
-        });
-
-        // Instantiate Lobby system loops immediately
-        initLobby();
-    </script>
-</body>
-</html>
+            [0,0,0,2,2,0,0,0],
