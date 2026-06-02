@@ -49,17 +49,15 @@
         var game = new Chess();
         var board = null;
 
-        // Assign numeric values to pieces (Positive for White, Negative for Black)
+        // Numeric values for pieces
         function getPieceValue(piece) {
             if (piece === null) return 0;
-            
             var values = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 };
             var value = values[piece.type];
-            
             return piece.color === 'w' ? value : -value;
         }
 
-        // Tally up the score of the entire board
+        // Tally up the board score
         function evaluateBoard(boardState) {
             var totalEvaluation = 0;
             for (var i = 0; i < 8; i++) {
@@ -70,7 +68,7 @@
             return totalEvaluation;
         }
 
-        // Look ahead 1 move and pick the absolute best option
+        // Optimized move selector
         function makeBestMove() {
             var possibleMoves = game.moves();
 
@@ -79,24 +77,27 @@
                 return;
             }
 
-            var bestMove = null;
-            // We want the lowest score because Black pieces are negative values
-            var bestValue = 9999; 
+            // Shuffle moves randomly first so ties don't cause predictable behavior
+            possibleMoves.sort(function() { return 0.5 - Math.random(); });
+
+            var bestMove = possibleMoves[0];
+            var bestValue = 99999; // Looking for the lowest negative score for Black
 
             for (var i = 0; i < possibleMoves.length; i++) {
                 var move = possibleMoves[i];
-                game.move(move); // Test the move out in the referee's head
+                game.move(move); 
                 
                 var boardValue = evaluateBoard(game.board());
-                game.undo(); // Take the test move back
+                game.undo(); 
 
+                // Strictly find the move that minimizes White's score the most
                 if (boardValue < bestValue) {
                     bestValue = boardValue;
                     bestMove = move;
                 }
             }
 
-            // Execute the winning move
+            // Play the best calculated move
             game.move(bestMove);
             board.position(game.fen());
 
@@ -116,7 +117,6 @@
 
             window.setTimeout(function() {
                 board.position(game.fen());
-                // Trigger the smart AI calculation
                 window.setTimeout(makeBestMove, 250);
             }, 250);
         }
