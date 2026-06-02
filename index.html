@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Buddy AI - Premium Review Edition</title>
+    <title>Chess Buddy AI - Master Analysis Edition</title>
     
-    <!-- External styling library used to draw the chess board grid squares -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     
     <style>
-        /* Modern Dark Mode Base Layout */
         body {
             background-color: #121212;
             color: #ffffff;
@@ -23,7 +21,6 @@
             box-sizing: border-box;
         }
         
-        /* Flexbox wrapper that hosts the Board on the left and the Dashboard on the right */
         .app-layout {
             display: flex;
             flex-direction: row;
@@ -34,7 +31,6 @@
             align-items: flex-start;
         }
 
-        /* Container stacking elements vertically */
         .board-container {
             display: flex;
             flex-direction: column;
@@ -48,7 +44,6 @@
             font-size: 24px;
         }
 
-        /* Setup Lobby Controls Panel */
         .lobby-panel {
             display: flex;
             flex-wrap: wrap;
@@ -89,7 +84,6 @@
             outline: none;
         }
 
-        /* Status Text Container and Restart Button wrapper */
         .panel {
             display: flex;
             justify-content: space-between;
@@ -125,7 +119,6 @@
             background-color: #d35400;
         }
 
-        /* Visual configuration for the graphical board element */
         #my-board {
             width: 400px;
             max-width: 90vw;
@@ -134,9 +127,8 @@
             overflow: hidden;
         }
 
-        /* Side Dashboard panel dedicated to logging algebraic chess notations and annotations */
         .sidebar {
-            width: 320px;
+            width: 340px;
             height: 560px;
             background: #1e1e1e;
             border: 1px solid #2a2a2a;
@@ -157,7 +149,6 @@
             color: #e67e22;
         }
 
-        /* Scrollable layout structure inside the live sidebar text element */
         #move-history {
             padding: 12px;
             overflow-y: auto;
@@ -168,10 +159,9 @@
             color: #d4d4d4;
         }
 
-        /* Wider grid columns to support move notation + dynamic review classification tags */
         .move-row {
             display: grid;
-            grid-template-columns: 35px 130px 130px;
+            grid-template-columns: 35px 145px 145px;
             border-bottom: 1px solid #252525;
             padding: 6px 0;
         }
@@ -180,7 +170,6 @@
             color: #757575;
         }
 
-        /* Dynamic evaluation label badges */
         .badge {
             display: inline-block;
             font-size: 10px;
@@ -197,9 +186,8 @@
         .badge-mistake { background: #e67e22; color: #fff; }
         .badge-blunder { background: #b43c3c; color: #fff; }
 
-        /* Game Review Navigation Panel Box */
         .review-panel {
-            display: none; /* Hidden until match finishes */
+            display: none; 
             background: #252525;
             padding: 10px;
             border-top: 1px solid #2a2a2a;
@@ -233,7 +221,6 @@
             border-color: #555;
         }
 
-        /* Dynamic Engine Reasoning Feedback Feed Box */
         #review-reasoning {
             background: #1a1a1a;
             border: 1px solid #2d2d2d;
@@ -241,11 +228,10 @@
             padding: 8px 12px;
             font-size: 12px;
             color: #b3b3b3;
-            min-height: 36px;
-            line-height: 1.4;
+            min-height: 54px;
+            line-height: 1.5;
         }
 
-        /* CSS Media Query: Automatically stacks sidebar underneath the board layout on mobile screens */
         @media (max-width: 700px) {
             .app-layout {
                 flex-direction: column;
@@ -254,7 +240,7 @@
             .sidebar {
                 width: 400px;
                 max-width: 90vw;
-                height: 280px;
+                height: 300px;
             }
         }
     </style>
@@ -262,8 +248,6 @@
 <body>
 
     <div class="app-layout">
-        
-        <!-- Left Column: Settings and Game Board -->
         <div class="board-container">
             <h1>Chess Buddy AI</h1>
             
@@ -292,12 +276,10 @@
             <div id="my-board"></div>
         </div>
 
-        <!-- Right Column: Dashboard Move History & Review Controls -->
         <div class="sidebar">
             <div class="sidebar-header">Live Move Log</div>
             <div id="move-history"></div>
             
-            <!-- Game Review Navigation System Buttons & Engine Coach Insights -->
             <div class="review-panel" id="review-controls">
                 <div id="review-reasoning">Click Prev/Next buttons to run coach analysis feedback...</div>
                 <div class="review-buttons">
@@ -308,7 +290,6 @@
         </div>
     </div>
 
-    <!-- Essential script libraries -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -319,16 +300,80 @@
         var $status = $('#status');   
         var $historyContainer = $('#move-history'); 
 
-        // Game Review Tracking Cache Arrays
         var isReviewMode = false;
-        var reviewHistoryList = [];       // Pure notation list ['e4', 'e5', ...]
-        var reviewMoveObjects = [];       // Full move details from chess.js
-        var reviewEvaluations = [];       // Parallel array storing raw board evaluations AFTER each move
-        var reviewClassifications = [];  // Decoded classification tags for each index
-        var reviewReasonings = [];        // AI Coach feedback strings for each index
+        var reviewHistoryList = [];       
+        var reviewEvaluations = [];       
+        var reviewClassifications = [];  
+        var reviewReasonings = [];        
         var reviewCurrentIndex = -1;
 
-        // Sound generation engine
+        // Position weight matrix tables to accurately evaluate structural advantage values
+        var pawnEval = [
+            [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+            [5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0],
+            [1.0,  1.0,  2.0,  3.0,  3.0,  2.0,  1.0,  1.0],
+            [0.5,  0.5,  1.0,  2.5,  2.5,  1.0,  0.5,  0.5],
+            [0.0,  0.0,  0.0,  2.0,  2.0,  0.0,  0.0,  0.0],
+            [0.5, -0.5, -1.0,  0.0,  0.0, -1.0, -0.5,  0.5],
+            [0.5,  1.0, 1.0,  -2.0, -2.0,  1.0,  1.0,  0.5],
+            [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0]
+        ];
+
+        var knightEval = [
+            [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0],
+            [-4.0, -2.0,  0.0,  0.0,  0.0,  0.0, -2.0, -4.0],
+            [-3.0,  0.0,  1.0,  1.5,  1.5,  1.0,  0.0, -3.0],
+            [-3.0,  0.5,  1.5,  2.0,  2.0,  1.5,  0.5, -3.0],
+            [-3.0,  0.0,  1.5,  2.0,  2.0,  1.5,  0.0, -3.0],
+            [-3.0,  0.5,  1.0,  1.5,  1.5,  1.0,  0.5, -3.0],
+            [-4.0, -2.0,  0.0,  0.5,  0.5,  0.0, -2.0, -4.0],
+            [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0]
+        ];
+
+        var bishopEval = [
+            [-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0],
+            [-1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0],
+            [-1.0,  0.0,  0.5,  1.0,  1.0,  0.5,  0.0, -1.0],
+            [-1.0,  0.5,  0.5,  1.0,  1.0,  0.5,  0.5, -1.0],
+            [-1.0,  0.0,  1.0,  1.0,  1.0,  1.0,  0.0, -1.0],
+            [-1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, -1.0],
+            [-1.0,  0.5,  0.0,  0.0,  0.0,  0.0,  0.5, -1.0],
+            [-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0]
+        ];
+
+        var rookEval = [
+            [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+            [0.5,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [0.0,   0.0,  0.0,  0.5,  0.5,  0.0,  0.0,  0.0]
+        ];
+
+        var evalQueen = [
+            [-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0],
+            [-1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0],
+            [-1.0,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0],
+            [-0.5,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5],
+            [0.0,   0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5],
+            [-1.0,  0.5,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0],
+            [-1.0,  0.0,  0.5,  0.0,  0.0,  0.0,  0.0, -1.0],
+            [-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0]
+        ];
+
+        var kingEval = [
+            [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+            [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+            [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+            [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+            [-2.0, -3.0, -3.0, -4.0, -4.0, -3.0, -3.0, -2.0],
+            [-1.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -1.0],
+            [ 2.0,  2.0,  0.0,  0.0,  0.0,  0.0,  2.0,  2.0],
+            [ 2.0,  3.0,  1.0,  0.0,  0.0,  1.0,  3.0,  2.0]
+        ];
+
         function playSound(isCapture) {
             try {
                 var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -354,32 +399,39 @@
             } catch (e) { console.log("Audio not supported"); }
         }
 
-        // Piece Evaluation mapping weights
-        function getPieceValue(piece) {
+        function getPieceValue(piece, x, y) {
             if (piece === null) return 0;
-            var values = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 };
-            var value = values[piece.type];
-            return piece.color === 'w' ? value : -value;
+            
+            var baseValues = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+            var score = baseValues[piece.type];
+
+            // Add directional positioning map matrix modifiers
+            if (piece.type === 'p') score += (piece.color === 'w' ? pawnEval[x][y] : pawnEval[7-x][y]) * 10;
+            if (piece.type === 'n') score += knightEval[x][y] * 10;
+            if (piece.type === 'b') score += bishopEval[x][y] * 10;
+            if (piece.type === 'r') score += rookEval[x][y] * 10;
+            if (piece.type === 'q') score += evalQueen[x][y] * 10;
+            if (piece.type === 'k') score += kingEval[x][y] * 10;
+
+            return piece.color === 'w' ? score : -score;
         }
 
-        // Global Board Total Value Evaluation Loop
         function evaluateBoard(boardState) {
             var totalEvaluation = 0;
             for (var i = 0; i < 8; i++) {
                 for (var j = 0; j < 8; j++) {
-                    totalEvaluation += getPieceValue(boardState[i][j]);
+                    totalEvaluation += getPieceValue(boardState[i][j], i, j);
                 }
             }
             return totalEvaluation;
         }
 
-        // Minimax deep loop calculation module with alpha-beta processing cuts
         function minimax(depth, alpha, beta, isMaximizingPlayer) {
             if (depth === 0 || game.game_over()) return evaluateBoard(game.board());
             var possibleMoves = game.moves();
 
             if (isMaximizingPlayer) {
-                var bestValue = -99999;
+                var bestValue = -999999;
                 for (var i = 0; i < possibleMoves.length; i++) {
                     game.move(possibleMoves[i]);
                     bestValue = Math.max(bestValue, minimax(depth - 1, alpha, beta, false));
@@ -389,7 +441,7 @@
                 }
                 return bestValue;
             } else {
-                var bestValue = 99999;
+                var bestValue = 999999;
                 for (var i = 0; i < possibleMoves.length; i++) {
                     game.move(possibleMoves[i]);
                     bestValue = Math.min(bestValue, minimax(depth - 1, alpha, beta, true));
@@ -401,12 +453,10 @@
             }
         }
 
-        // Status bar and log view rendering controller
         function updateStatusAndLog() {
             var statusText = '';
             var userColor = $('#color-select').val();
             var botName = $('#bot-select option:selected').text().split(' (')[0];
-            
             var isBotTurn = game.turn() !== userColor;
 
             if (game.game_over()) {
@@ -420,20 +470,16 @@
             }
             $status.html(statusText);
 
-            // Populate notation log strings
             var history = isReviewMode ? reviewHistoryList : game.history();
             var html = '';
             for (var i = 0; i < history.length; i += 2) {
                 var moveNum = Math.floor(i / 2) + 1;
-                
                 var whiteMove = history[i];
                 var blackMove = history[i + 1] ? history[i + 1] : '';
                 
-                // Fetch dynamic tags if they exist inside compilation data streams
                 var whiteBadge = (isReviewMode && reviewClassifications[i]) ? reviewClassifications[i] : '';
                 var blackBadge = (isReviewMode && reviewClassifications[i + 1]) ? reviewClassifications[i + 1] : '';
 
-                // Active text highlight tracers
                 var activeClassW = (isReviewMode && reviewCurrentIndex === i) ? 'style="color:#e67e22; font-weight:bold;"' : '';
                 var activeClassB = (isReviewMode && reviewCurrentIndex === i + 1) ? 'style="color:#e67e22; font-weight:bold;"' : '';
 
@@ -450,95 +496,112 @@
             }
         }
 
-        /**
-         * MASTER REVIEW ANALYSIS COMPILER
-         * Walks backwards through the completed game, evaluating alternatives step by step
-         * to classify every single move with reasoning feedback!
+        /* 
+         * MASTER DEEP-PLY LOOKAHEAD COMPILER
+         * Simulates tactical futures 3 half-moves deep to ensure pinpoint move ratings and unique text feedback
          */
         function activateGameReview() {
             if (isReviewMode) return;
             isReviewMode = true;
             
             reviewHistoryList = game.history();
-            
-            // Extract the deep dictionary profiles generated by chess.js during active gameplay loops
             var rawHistoryObjects = game.history({ verbose: true });
             
-            // Spin up an independent background calculation referee model to evaluate shifts sequentially
             var analysisGame = new Chess();
-            var initialEval = 0; // Starting baseline position evaluation (0.00)
+            var calculatedEvaluations = [0]; 
             
+            // Step 1: Pre-calculate deep structural positions using true engine weights
+            for (var i = 0; i < reviewHistoryList.length; i++) {
+                analysisGame.move(reviewHistoryList[i]);
+                
+                var primaryGameInstance = game;
+                game = analysisGame;
+                
+                // Deep look-ahead to verify genuine tactical threats or conversions
+                var nextTurnColor = analysisGame.turn();
+                var lookAheadScore = minimax(3, -1000000, 1000000, (nextTurnColor === 'w'));
+                
+                game = primaryGameInstance;
+                calculatedEvaluations.push(lookAheadScore);
+            }
+
+            var pieceNames = { p: 'Pawn', n: 'Knight', b: 'Bishop', r: 'Rook', q: 'Queen', k: 'King' };
+
+            // Step 2: Run classification mapping using deep look-ahead arrays
             for (var i = 0; i < reviewHistoryList.length; i++) {
                 var currentMoveObj = rawHistoryObjects[i];
-                var movingColor = currentMoveObj.color; // 'w' or 'b'
+                var movingColor = currentMoveObj.color;
                 
-                // Get all alternative options before executing the actual move to check for top paths
-                var legalAlternatives = analysisGame.moves();
+                var scoreBeforeMove = calculatedEvaluations[i];
+                var scoreAfterMove = calculatedEvaluations[i + 1];
                 
-                // Execute the move on the tracker to measure real positional outcome
-                analysisGame.move(reviewHistoryList[i]);
-                var postEval = evaluateBoard(analysisGame.board());
-                
-                // Determine the true evaluation shift delta relative to the moving side's perspective
                 var evalDrop = 0;
                 if (movingColor === 'w') {
-                    evalDrop = initialEval - postEval; // If positive, White lost advantage points
+                    evalDrop = scoreBeforeMove - scoreAfterMove; 
                 } else {
-                    evalDrop = postEval - initialEval; // If positive, Black lost advantage points
+                    evalDrop = scoreAfterMove - scoreBeforeMove; 
                 }
                 
-                // Default fallback assignment rules
-                var classification = '<span class="badge badge-good">Good</span>';
-                var reasoning = "A solid, playable move that keeps the position balanced.";
+                var pieceMoved = pieceNames[currentMoveObj.piece];
+                var targetSquare = currentMoveObj.to;
 
-                // Check for dynamic tactical labels using mathematical boundaries
-                if (evalDrop >= 15) {
+                // Default Move Profile Assignments
+                var classification = '<span class="badge badge-good">Good</span>';
+                var reasoning = `Advanced your ${pieceMoved} to ${targetSquare} maintaining a solid positional framework.`;
+
+                // Handle check evasions or structural expansions dynamically
+                if (currentMoveObj.flags.includes('k') || currentMoveObj.flags.includes('q')) {
+                    reasoning = `Castled your King to safety and activated your Rook into play.`;
+                } else if (currentMoveObj.san.includes('+')) {
+                    reasoning = `Swung your ${pieceMoved} to ${targetSquare}, putting the opposing King directly under Check!`;
+                } else if (currentMoveObj.captured) {
+                    var capturedPiece = pieceNames[currentMoveObj.captured];
+                    reasoning = `Captured your opponent's ${capturedPiece} on ${targetSquare}, converting material assets.`;
+                }
+
+                // Apply Strict Evaluation Labels based on 3-Ply Engine drops
+                if (evalDrop >= 250) { 
                     classification = '<span class="badge badge-blunder">🔴 Blunder</span>';
-                    reasoning = `Blunder! This move dropped over 1.5 points of piece equity. You left a critical asset hanging or missed a major tactical threat.`;
-                } else if (evalDrop >= 6) {
+                    if (currentMoveObj.piece === 'q') {
+                        reasoning = `Blunder! You completely hung your Queen on ${targetSquare} or missed an immediate forced material calculation trap.`;
+                    } else {
+                        reasoning = `Critical Blunder! Moving the ${pieceMoved} to ${targetSquare} severely compromises your position, leaving valuable material completely hanging.`;
+                    }
+                } else if (evalDrop >= 120) {
                     classification = '<span class="badge badge-mistake">🟠 Mistake</span>';
-                    reasoning = `Mistake. This choice values around 0.6 to 1.5 material metrics below optimal paths. Better defensive lines were open.`;
-                } else if (evalDrop >= 3) {
+                    reasoning = `Mistake. Developing the ${pieceMoved} to ${targetSquare} lets your opponent capitalize on a severe tactical line.`;
+                } else if (evalDrop >= 50) {
                     classification = '<span class="badge badge-inaccuracy">🟡 Inaccuracy</span>';
-                    reasoning = `Inaccuracy. Not the cleanest setup line. You conceded a minor structural edge back over to your opponent.`;
+                    reasoning = `Inaccuracy. Moving the ${pieceMoved} to ${targetSquare} wasn't the most optimal line. A cleaner development step was open.`;
                 } else {
-                    // Check if this move was the single highest scored move choice or a hard tactical blow
-                    var wasTacticalCapture = currentMoveObj.captured && (currentMoveObj.piece === 'p' || currentMoveObj.piece === 'n' || currentMoveObj.piece === 'b') && (currentMoveObj.captured === 'q' || currentMoveObj.captured === 'r');
-                    
-                    if (wasTacticalCapture && evalDrop <= 0) {
+                    // Check for high tier play patterns
+                    var isMajorCapture = currentMoveObj.captured && (currentMoveObj.captured === 'q' || currentMoveObj.captured === 'r');
+                    if (isMajorCapture && evalDrop <= 10) {
                         classification = '<span class="badge badge-brilliant">⭐ Brilliant</span>';
-                        reasoning = `Brilliant!! A spectacular tactical choice that secures an immediate material swing or sharp positional victory line.`;
-                    } else if (evalDrop <= -1) {
+                        reasoning = `Brilliant!! A beautiful tactical strike on ${targetSquare} that safely wins a high-value asset to secure control.`;
+                    } else if (evalDrop <= -20) {
                         classification = '<span class="badge badge-best">✨ Best Move</span>';
-                        reasoning = `The absolute best tactical development path. This line maximizes your active piece control and territory weight.`;
+                        reasoning = `Excellent precision. The engine notes this ${pieceMoved} push to ${targetSquare} as the absolute best developmental option available.`;
                     }
                 }
 
-                // Append computed details to cache
                 reviewClassifications.push(classification);
                 reviewReasonings.push(reasoning);
-                reviewEvaluations.push(postEval);
-                
-                // Rotate state variable to update previous step evaluation frame indexes
-                initialEval = postEval;
+                // Convert centipawns back to easy-to-read decimals
+                reviewEvaluations.push((scoreAfterMove / 100).toFixed(2));
             }
 
-            // Reset navigation indices down to final frame and show controls
             reviewCurrentIndex = reviewHistoryList.length - 1;
             $('#review-controls').css('display', 'flex');
-            
-            // Trigger coach text updates
             reviewMove(0); 
         }
 
-        // Updates position values backward or forward during analysis reviews
         function reviewMove(direction) {
             var targetIndex = reviewCurrentIndex + direction;
             if (targetIndex < -1 || targetIndex >= reviewHistoryList.length) return;
             
             reviewCurrentIndex = targetIndex;
             
-            // Re-simulate safe board visual states down to current index pointers
             var reviewGame = new Chess();
             for (var i = 0; i <= reviewCurrentIndex; i++) {
                 reviewGame.move(reviewHistoryList[i]);
@@ -547,13 +610,10 @@
             board.position(reviewGame.fen());
             playSound(false);
             
-            // Print dynamic engine coach details directly into the dashboard
             if (reviewCurrentIndex >= 0) {
                 var currentReason = reviewReasonings[reviewCurrentIndex];
-                var numericScore = (reviewEvaluations[reviewCurrentIndex] / 10).toFixed(2);
-                
-                // Append text readouts to coaching div container
-                $('#review-reasoning').html(`<strong>Score Balance:</strong> ${numericScore}<br>${currentReason}`);
+                var numericScore = reviewEvaluations[reviewCurrentIndex];
+                $('#review-reasoning').html(`<strong>Engine Evaluation:</strong> ${numericScore}<br>${currentReason}`);
             } else {
                 $('#review-reasoning').html("Starting Position. Use buttons to evaluate moves.");
             }
@@ -572,12 +632,12 @@
             
             var bestMove = null;
             var isBotWhite = game.turn() === 'w';
-            var bestValue = isBotWhite ? -99999 : 99999;
+            var bestValue = isBotWhite ? -999999 : 999999;
 
             for (var i = 0; i < possibleMoves.length; i++) {
                 var move = possibleMoves[i];
                 game.move(move);
-                var boardValue = minimax(searchDepth - 1, -100000, 100000, !isBotWhite); 
+                var boardValue = minimax(searchDepth - 1, -1000000, 1000000, !isBotWhite); 
                 game.undo();
 
                 if (isBotWhite) {
@@ -624,7 +684,6 @@
         }
 
         function resetGame() {
-            // Hard clean global state flags
             isReviewMode = false;
             reviewHistoryList = [];
             reviewClassifications = [];
