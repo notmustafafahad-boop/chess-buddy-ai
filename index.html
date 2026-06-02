@@ -49,7 +49,7 @@
         var game = new Chess();
         var board = null;
 
-        // Numeric values for pieces
+        // Piece values for board evaluation
         function getPieceValue(piece) {
             if (piece === null) return 0;
             var values = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 };
@@ -57,7 +57,7 @@
             return piece.color === 'w' ? value : -value;
         }
 
-        // Tally up the board score
+        // Tally total score (Positive = White advantage, Negative = Black advantage)
         function evaluateBoard(boardState) {
             var totalEvaluation = 0;
             for (var i = 0; i < 8; i++) {
@@ -68,7 +68,37 @@
             return totalEvaluation;
         }
 
-        // Optimized move selector
+        // The core Minimax Algorithm
+        function minimax(depth, isMaximizingPlayer) {
+            // Base case: if we hit our depth limit or game is over, evaluate the board
+            if (depth === 0 || game.game_over()) {
+                return evaluateBoard(game.board());
+            }
+
+            var possibleMoves = game.moves();
+
+            if (isMaximizingPlayer) {
+                // White wants to maximize the score
+                var bestValue = -99999;
+                for (var i = 0; i < possibleMoves.length; i++) {
+                    game.move(possibleMoves[i]);
+                    bestValue = Math.max(bestValue, minimax(depth - 1, false));
+                    game.undo();
+                }
+                return bestValue;
+            } else {
+                // Black wants to minimize the score
+                var bestValue = 99999;
+                for (var i = 0; i < possibleMoves.length; i++) {
+                    game.move(possibleMoves[i]);
+                    bestValue = Math.min(bestValue, minimax(depth - 1, true));
+                    game.undo();
+                }
+                return bestValue;
+            }
+        }
+
+        // Triggers the lookahead logic and executes the best move
         function makeBestMove() {
             var possibleMoves = game.moves();
 
@@ -77,27 +107,27 @@
                 return;
             }
 
-            // Shuffle moves randomly first so ties don't cause predictable behavior
+            // Shuffle so tied moves look natural
             possibleMoves.sort(function() { return 0.5 - Math.random(); });
 
-            var bestMove = possibleMoves[0];
-            var bestValue = 99999; // Looking for the lowest negative score for Black
+            var bestMove = null;
+            var bestValue = 99999; // Looking for the lowest score for Black
 
+            // Loop through all immediate moves and calculate their deep minimax outcomes
             for (var i = 0; i < possibleMoves.length; i++) {
                 var move = possibleMoves[i];
-                game.move(move); 
+                game.move(move);
                 
-                var boardValue = evaluateBoard(game.board());
-                game.undo(); 
+                // We pass 'depth 2' here because this loop handles the first layer (total depth = 3)
+                var boardValue = minimax(2, true); 
+                game.undo();
 
-                // Strictly find the move that minimizes White's score the most
                 if (boardValue < bestValue) {
                     bestValue = boardValue;
                     bestMove = move;
                 }
             }
 
-            // Play the best calculated move
             game.move(bestMove);
             board.position(game.fen());
 
