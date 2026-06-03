@@ -506,41 +506,108 @@
 
         const botDatabase = {
             beginner: [
-                { id: "b1", name: "Toddler Timmy", elo: 250, avatar: "👶", desc: "Plays instantly, gets distracted easily.", blunderChance: 0.40 },
-                { id: "b2", name: "Whiskers Kitty", elo: 380, avatar: "🐱", desc: "Likes swatting at pieces randomly.", blunderChance: 0.30 },
-                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned how the pieces move yesterday.", blunderChance: 0.25 },
-                { id: "b4", name: "Checkmate Chuck", elo: 620, avatar: "👦", desc: "Tries to look for scholar's mate every game.", blunderChance: 0.20 },
-                { id: "b5", name: "Coffeehouse Cody", elo: 750, avatar: "☕", desc: "Plays rapid random attacks without thinking.", blunderChance: 0.15 }
+                { id: "b1", name: "Toddler Timmy", elo: 250, avatar: "👶", desc: "Plays instantly, gets distracted easily.", blunderChance: 0.40, depth: 1 },
+                { id: "b2", name: "Whiskers Kitty", elo: 380, avatar: "🐱", desc: "Likes swatting at pieces randomly.", blunderChance: 0.30, depth: 1 },
+                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned how the pieces move yesterday.", blunderChance: 0.25, depth: 1 },
+                { id: "b4", name: "Checkmate Chuck", elo: 620, avatar: "👦", desc: "Tries to look for scholar's mate every game.", blunderChance: 0.20, depth: 2 },
+                { id: "b5", name: "Coffeehouse Cody", elo: 750, avatar: "☕", desc: "Plays rapid random attacks without thinking.", blunderChance: 0.15, depth: 2 }
             ],
             intermediate: [
-                { id: "i1", name: "Casual Carl", elo: 850, avatar: "🧠", desc: "Plays balanced, basic standard club chess.", blunderChance: 0.12 },
-                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent tactical vision, occasionally blunders.", blunderChance: 0.09 },
-                { id: "i3", name: "Professor Penny", elo: 1150, avatar: "👓", desc: "Very safe developer but misses deep forks.", blunderChance: 0.07 },
-                { id: "i4", name: "Tactical Toby", elo: 1300, avatar: "🏹", desc: "Enjoys sacrificing minor pieces for space.", blunderChance: 0.05 },
-                { id: "i5", name: "Solid Sophia", elo: 1450, avatar: "🛡️", desc: "Extremely defensive style, waits for your errors.", blunderChance: 0.03 }
+                { id: "i1", name: "Casual Carl", elo: 850, avatar: "🧠", desc: "Plays balanced, basic standard club chess.", blunderChance: 0.12, depth: 2 },
+                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent tactical vision, occasionally blunders.", blunderChance: 0.09, depth: 2 },
+                { id: "i3", name: "Professor Penny", elo: 1150, avatar: "👓", desc: "Very safe developer but misses deep forks.", blunderChance: 0.07, depth: 3 },
+                { id: "i4", name: "Tactical Toby", elo: 1300, avatar: "🏹", desc: "Enjoys sacrificing minor pieces for space.", blunderChance: 0.05, depth: 3 },
+                { id: "i5", name: "Solid Sophia", elo: 1450, avatar: "🛡️", desc: "Extremely defensive style, waits for your errors.", blunderChance: 0.03, depth: 3 }
             ],
             expert: [
-                { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting advanced minor pieces.", blunderChance: 0.02 },
-                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for highly aesthetic mating webs.", blunderChance: 0.01 },
-                { id: "e3", name: "Positional Piper", elo: 1900, avatar: "🪈", desc: "Master of squeezing your pawn structures out.", blunderChance: 0.01 },
-                { id: "e4", name: "Endgame Ethan", elo: 2050, avatar: "⏳", desc: "Swaps off heavy items to win simple endgames.", blunderChance: 0.00 },
-                { id: "e5", name: "Calculated Chloe", elo: 2150, avatar: "📊", desc: "Deep brute-force checker of structural lines.", blunderChance: 0.00 }
+                { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting advanced minor pieces.", blunderChance: 0.02, depth: 3 },
+                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for highly aesthetic mating webs.", blunderChance: 0.01, depth: 3 },
+                { id: "e3", name: "Positional Piper", elo: 1900, avatar: "🪈", desc: "Master of squeezing your pawn structures out.", blunderChance: 0.01, depth: 4 },
+                { id: "e4", name: "Endgame Ethan", elo: 2050, avatar: "⏳", desc: "Swaps off heavy items to win simple endgames.", blunderChance: 0.00, depth: 4 },
+                { id: "e5", name: "Calculated Chloe", elo: 2150, avatar: "📊", desc: "Deep brute-force checker of structural lines.", blunderChance: 0.00, depth: 4 }
             ],
             gm: [
-                { id: "g1", name: "King Maker", elo: 2250, avatar: "👑", desc: "Exquisite control over open files.", blunderChance: 0.00 },
-                { id: "g2", name: "Oracle Owen", elo: 2380, avatar: "🔮", desc: "Foresees positional damage 8 moves away.", blunderChance: 0.00 },
-                { id: "g3", name: "Blizzard Boris", elo: 2500, avatar: "❄️", desc: "Cold, uncompromising tactical execution.", blunderChance: 0.00 },
-                { id: "g4", name: "Valkyrie Victoria", elo: 2620, avatar: "⚔️", desc: "Fierce attacks on opposite side castling layouts.", blunderChance: 0.00 },
-                { id: "g5", name: "Grandmaster Garry", elo: 2750, avatar: "🎖️", desc: "Legendary opening prep specialist.", blunderChance: 0.00 }
+                { id: "g1", name: "King Maker", elo: 2250, avatar: "👑", desc: "Exquisite control over open files.", blunderChance: 0.00, depth: 4 },
+                { id: "g2", name: "Oracle Owen", elo: 2380, avatar: "🔮", desc: "Foresees positional damage 8 moves away.", blunderChance: 0.00, depth: 4 },
+                { id: "g3", name: "Blizzard Boris", elo: 2500, avatar: "❄️", desc: "Cold, uncompromising tactical execution.", blunderChance: 0.00, depth: 4 },
+                { id: "g4", name: "Valkyrie Victoria", elo: 2620, avatar: "⚔️", desc: "Fierce attacks on opposite side castling layouts.", blunderChance: 0.00, depth: 4 },
+                { id: "g5", name: "Grandmaster Garry", elo: 2750, avatar: "🎖️", desc: "Legendary opening prep specialist.", blunderChance: 0.00, depth: 4 }
             ],
             supergm: [
-                { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", blunderChance: 0.00 },
-                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", blunderChance: 0.00 },
-                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", blunderChance: 0.00 },
-                { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot logically conceptualize.", blunderChance: 0.00 },
-                { id: "s5", name: "Chess Buddy Overlord", elo: 3450, avatar: "👽", desc: "Flawless mathematical perfection.", blunderChance: 0.00 }
+                { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", blunderChance: 0.00, depth: 4 },
+                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", blunderChance: 0.00, depth: 5 },
+                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", blunderChance: 0.00, depth: 5 },
+                { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot logically conceptualize.", blunderChance: 0.00, depth: 5 },
+                { id: "s5", name: "Chess Buddy Overlord", elo: 3450, avatar: "👽", desc: "Flawless mathematical perfection.", blunderChance: 0.00, depth: 5 }
             ]
         };
+
+        // Positional evaluation tables for strategic engine accuracy
+        const pawnEvalGrid = [
+            [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+            [5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0],
+            [1.0,  1.0,  2.0,  3.0,  3.0,  2.0,  1.0,  1.0],
+            [0.5,  0.5,  1.0,  2.5,  2.5,  1.0,  0.5,  0.5],
+            [0.0,  0.0,  0.0,  2.0,  2.0,  0.0,  0.0,  0.0],
+            [0.5, -0.5, -1.0,  0.0,  0.0, -1.0, -0.5,  0.5],
+            [0.5,  1.0, 1.0,  -2.0, -2.0,  1.0,  1.0,  0.5],
+            [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0]
+        ];
+
+        const knightEvalGrid = [
+            [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0],
+            [-4.0, -2.0,  0.0,  0.0,  0.0,  0.0, -2.0, -4.0],
+            [-3.0,  0.0,  1.0,  1.5,  1.5,  1.0,  0.0, -3.0],
+            [-3.0,  0.5,  1.5,  2.0,  2.0,  1.5,  0.5, -3.0],
+            [-3.0,  0.0,  1.5,  2.0,  2.0,  1.5,  0.0, -3.0],
+            [-3.0,  0.5,  1.0,  1.5,  1.5,  1.0,  0.5, -3.0],
+            [-4.0, -2.0,  0.0,  0.5,  0.5,  0.0, -2.0, -4.0],
+            [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0]
+        ];
+
+        const bishopEvalGrid = [
+            [-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0],
+            [-1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0],
+            [-1.0,  0.0,  0.5,  1.0,  1.0,  0.5,  0.0, -1.0],
+            [-1.0,  0.5,  0.5,  1.0,  1.0,  0.5,  0.5, -1.0],
+            [-1.0,  0.0,  1.0,  1.0,  1.0,  1.0,  0.0, -1.0],
+            [-1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, -1.0],
+            [-1.0,  0.5,  0.0,  0.0,  0.0,  0.0,  0.5, -1.0],
+            [-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0]
+        ];
+
+        const rookEvalGrid = [
+            [ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+            [ 0.5,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
+            [ 0.0,  0.0,  0.0,  0.5,  0.5,  0.0,  0.0,  0.0]
+        ];
+
+        const queenEvalGrid = [
+            [-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0],
+            [-1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0],
+            [-1.0,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0],
+            [-0.5,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5],
+            [ 0.0,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5],
+            [-1.0,  0.5,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0],
+            [-1.0,  0.0,  0.5,  0.0,  0.0,  0.0,  0.0, -1.0],
+            [-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0]
+        ];
+
+        const kingEvalGrid = [
+            [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+            [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+            [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+            [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+            [-2.0, -3.0, -3.0, -4.0, -4.0, -3.0, -3.0, -2.0],
+            [-1.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -1.0],
+            [ 2.2,  2.0,  0.0,  0.0,  0.0,  0.0,  2.0,  2.2],
+            [ 2.0,  3.0,  1.0,  0.0,  0.0,  1.0,  3.0,  2.0]
+        ];
 
         function handleGoogleCredentialResponse(response) {
             const base64Url = response.credential.split('.')[1];
@@ -586,7 +653,7 @@
             if (mode === 'login') {
                 titleEl.innerText = "Welcome back";
             } else {
-                titleEl.innerText = "Make a account";
+                titleEl.innerText = "Make an account";
             }
             document.getElementById('auth-modal').style.display = 'flex';
             initGoogleIdentityAuth(); 
@@ -701,19 +768,62 @@
             compileGameSummary();
         }
 
+        // Deep evaluation engine utilizing positional matrices 
         function evaluateBoard(boardState) {
             var score = 0;
-            for (var i=0; i<8; i++) {
-                for (var j=0; j<8; j++) {
-                    var piece = boardState[i][j];
+            for (var r = 0; r < 8; r++) {
+                for (var c = 0; c < 8; c++) {
+                    var piece = boardState[r][c];
                     if (piece) {
-                        var values = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 200 };
-                        var val = values[piece.type];
-                        score += (piece.color === 'w' ? val : -val);
+                        var val = 0;
+                        var multiplier = (piece.color === 'w') ? 1 : -1;
+                        var rowLookup = (piece.color === 'w') ? r : (7 - r);
+
+                        switch (piece.type) {
+                            case 'p': val = 10 + pawnEvalGrid[rowLookup][c]; break;
+                            case 'n': val = 30 + knightEvalGrid[rowLookup][c]; break;
+                            case 'b': val = 30 + bishopEvalGrid[rowLookup][c]; break;
+                            case 'r': val = 50 + rookEvalGrid[rowLookup][c]; break;
+                            case 'q': val = 90 + queenEvalGrid[rowLookup][c]; break;
+                            case 'k': val = 900 + kingEvalGrid[rowLookup][c]; break;
+                        }
+                        score += (val * multiplier);
                     }
                 }
             }
-            return score;
+            return score / 10.0;
+        }
+
+        // Alpha-Beta Minimax Engine Core Strategy Processor
+        function minimax(depth, alpha, beta, isMaximizing) {
+            if (depth === 0 || game.game_over()) {
+                return evaluateBoard(game.board());
+            }
+
+            var moves = game.moves();
+            if (isMaximizing) {
+                var maxEval = -Infinity;
+                for (var i = 0; i < moves.length; i++) {
+                    game.move(moves[i]);
+                    var evaluation = minimax(depth - 1, alpha, beta, false);
+                    game.undo();
+                    maxEval = Math.max(maxEval, evaluation);
+                    alpha = Math.max(alpha, evaluation);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                var minEval = Infinity;
+                for (var i = 0; i < moves.length; i++) {
+                    game.move(moves[i]);
+                    var evaluation = minimax(depth - 1, alpha, beta, true);
+                    game.undo();
+                    minEval = Math.min(minEval, evaluation);
+                    beta = Math.min(beta, evaluation);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
         }
 
         function updateWinLossPredictionBar() {
@@ -755,7 +865,14 @@
         }
 
         function compileGameSummary() {
-            document.getElementById('accuracy-val').innerText = "84%";
+            var score = evaluateBoard(game.board());
+            var dynamicAccuracy = 50; 
+            if (game.in_checkmate()) {
+                dynamicAccuracy = (game.turn() === 'b') ? 92 : 34;
+            } else {
+                dynamicAccuracy = Math.min(98, Math.max(20, Math.floor(70 + (score * 2))));
+            }
+            document.getElementById('accuracy-val').innerText = dynamicAccuracy + "%";
             document.getElementById('elo-val').innerText = "Unchanged";
             document.getElementById('gameover-modal').style.display = 'flex';
         }
@@ -767,11 +884,40 @@
 
         function makeBotMove() {
             if (game.game_over()) return;
+
             var moves = game.moves();
-            var move = moves[Math.floor(Math.random() * moves.length)];
-            game.move(move);
-            board.position(game.fen());
-            updateStatusAndLog();
+            if (moves.length === 0) return;
+
+            var selectedMove = null;
+
+            // Blunder calculation layer
+            if (activeBot && Math.random() < activeBot.blunderChance) {
+                selectedMove = moves[Math.floor(Math.random() * moves.length)];
+            } else {
+                var targetDepth = activeBot ? activeBot.depth : 2;
+                var bestValue = Infinity; // Engine is Black, looking to minimize score
+                var moveCandidates = [];
+
+                for (var i = 0; i < moves.length; i++) {
+                    game.move(moves[i]);
+                    var value = minimax(targetDepth - 1, -Infinity, Infinity, true);
+                    game.undo();
+
+                    if (value < bestValue) {
+                        bestValue = value;
+                        moveCandidates = [moves[i]];
+                    } else if (value === bestValue) {
+                        moveCandidates.push(moves[i]);
+                    }
+                }
+                selectedMove = moveCandidates[Math.floor(Math.random() * moveCandidates.length)];
+            }
+
+            if (selectedMove) {
+                game.move(selectedMove);
+                board.position(game.fen());
+                updateStatusAndLog();
+            }
         }
 
         function removeGreyCircles() { $('#my-board .square-55d63').removeClass('legal-move-marker'); }
@@ -792,7 +938,7 @@
             if (move === null) return 'snapback';
 
             updateStatusAndLog();
-            if (!isLocalFriendMode) { window.setTimeout(makeBotMove, 300); }
+            if (!isLocalFriendMode) { window.setTimeout(makeBotMove, 250); }
         }
 
         function resetGame() {
