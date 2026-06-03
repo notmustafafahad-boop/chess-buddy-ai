@@ -276,56 +276,8 @@
         }
         .auth-input:focus { border-color: var(--chess-green); }
 
-        /* BRAND SSO BUTTON SIGNATURES */
-        .sso-btn {
-            width: 100%; padding: 11px 16px; margin: 8px 0; border-radius: 6px; 
-            border: 1px solid #dadce0; background: #ffffff; color: #3c4043; 
-            font-weight: 600; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; gap: 12px; font-size: 14px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            transition: background-color 0.2s, box-shadow 0.2s;
-        }
-        .sso-btn:hover { background-color: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        
-        .sso-btn.apple { 
-            background: #000000; color: #ffffff; border: none; 
-        }
-        .sso-btn.apple:hover { background-color: #1b1b1b; }
-        
-        .sso-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
-
         .divider { margin: 18px 0; color: #666; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #333; }
-
-        /* MOCK INTERACTIVE WINDOW POPUP INTERFACE */
-        .mock-popup-window {
-            display: none; position: fixed; width: 440px; height: 520px;
-            background: #ffffff; border-radius: 8px; box-shadow: 0 15px 50px rgba(0,0,0,0.6);
-            z-index: 2000; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            flex-direction: column; overflow: hidden; font-family: Roboto, Arial, sans-serif;
-        }
-        .popup-browser-bar {
-            background: #f1f3f4; padding: 10px 16px; display: flex; align-items: center;
-            gap: 12px; border-bottom: 1px solid #e0e2e5; box-sizing: border-box;
-        }
-        .browser-dots { display: flex; gap: 6px; }
-        .browser-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; }
-        .browser-dot.red { background: #f25f56; }
-        .browser-dot.yellow { background: #f6be3f; }
-        .browser-dot.green { background: #57c244; }
-        .browser-url-field {
-            background: #ffffff; border-radius: 12px; padding: 3px 12px; flex-grow: 1;
-            font-size: 11px; color: #606468; border: 1px solid #dadce0; text-align: left;
-        }
-        .popup-main-body {
-            flex-grow: 1; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 40px; color: #202124; box-sizing: border-box;
-        }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4285f4;
-            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .modal-card { background: var(--panel-bg); border: 1px solid #333; border-radius: 8px; width: 420px; max-width: 90vw; padding: 24px; text-align: center; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
@@ -358,7 +310,7 @@
                 <span class="user-avatar">🦊</span>
                 <div class="user-meta">
                     <div class="user-name" id="profile-display-name">Guest Master</div>
-                    <div class="user-stat">Rating: <span id="profile-display-elo">1500</span> ELO</div>
+                    <div class="user-stat">Rating: <span id="profile-display-elo">500</span> ELO</div>
                 </div>
                 <button class="btn-nav" style="padding: 4px 10px; font-size: 11px; margin-left: 5px;" onclick="triggerLogout()">Logout</button>
             </div>
@@ -391,27 +343,27 @@
         
         <div class="lobby-container">
             <div class="rank-section">
-                <div class="rank-title" style="color: #5cacf7;">👶 Beginners</div>
+                <div class="rank-title" style="color: #5cacf7;">👶 Beginners (200 - 800)</div>
                 <div class="bot-grid" id="grid-beginner"></div>
             </div>
 
             <div class="rank-section">
-                <div class="rank-title" style="color: var(--chess-green);">🟢 Intermediates</div>
+                <div class="rank-title" style="color: var(--chess-green);">🟢 Intermediates (800 - 1500)</div>
                 <div class="bot-grid" id="grid-intermediate"></div>
             </div>
 
             <div class="rank-section">
-                <div class="rank-title" style="color: #f7c04a;">📐 Experts</div>
+                <div class="rank-title" style="color: #f7c04a;">📐 Experts (1500 - 2200)</div>
                 <div class="bot-grid" id="grid-expert"></div>
             </div>
 
             <div class="rank-section">
-                <div class="rank-title" style="color: #e67e22;">👑 Grandmasters</div>
+                <div class="rank-title" style="color: #e67e22;">👑 Grandmasters (2200 - 2800)</div>
                 <div class="bot-grid" id="grid-gm"></div>
             </div>
 
             <div class="rank-section">
-                <div class="rank-title" style="color: #b43c3c;">🌋 Super GMs</div>
+                <div class="rank-title" style="color: #b43c3c;">🌋 Super GMs (2800 - 3500)</div>
                 <div class="bot-grid" id="grid-supergm"></div>
             </div>
         </div>
@@ -453,7 +405,6 @@
             <h2 id="auth-title" style="margin-top:0; color:var(--chess-green);">Access Account</h2>
             <p id="auth-desc" style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Synchronize profiles & performance history.</p>
             
-            <!-- 🚀 UPDATED: LIVE GOOGLE AUTH PROJECT CLIENT ID -->
             <div id="g_id_onload"
                  data-client_id="342294129862-bu1j9f349uip99to9f0t5pfiliuki1f4.apps.googleusercontent.com"
                  data-context="signin"
@@ -472,40 +423,13 @@
                  style="margin-bottom: 12px; display: flex; justify-content: center;">
             </div>
 
-            <!-- Original Mock Apple Button preserved -->
-            <button class="sso-btn apple" onclick="triggerOAuthFlow('Apple')">
-                <div class="sso-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 170" width="100%" height="100%" fill="currentColor">
-                        <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.34.13-9.13-1.92-14.36-6.13-3.41-2.73-7.39-7.5-11.92-14.33-10.15-15.11-17.2-32.03-21.13-50.73-2.42-11.45-3.63-22.39-3.63-32.82 0-16.14 3.83-29.41 11.49-39.81 7.66-10.4 17.15-15.75 28.48-16.03 4.58 0 9.8 1.38 15.66 4.13 5.86 2.75 9.71 4.12 11.57 4.12 1.55 0 5.17-1.31 10.86-3.92 6.92-3.14 12.82-4.53 17.7-4.17 16.54 1.3 29.21 7.5 38 18.58-14.57 8.87-21.64 20.84-21.21 35.92.42 11.5 4.88 21.05 13.37 28.66 8.5 7.61 18.38 11.75 29.65 12.43-2.48 7.37-6.05 15.22-10.71 23.54zm-28.66-114.7c0 8.01-2.96 15.55-8.89 21.64-5.93 6.08-13.3 9.77-22.09 11.05.13-1.05.2-2.12.2-3.21 0-7.75 3.03-15.26 9.08-22.53 6.05-7.28 13.56-11.41 22.52-12.41.62 1.83.92 3.65.92 5.46z"/>
-                    </svg>
-                </div>
-                Continue with Apple
-            </button>
+            <div class="divider">or use standard login</div>
 
-            <div class="divider">or use email credentials</div>
-
-            <input type="email" id="auth-email" class="auth-input" placeholder="Email Address" value="notmustafa.fahad@gmail.com">
+            <input type="text" id="auth-username" class="auth-input" placeholder="Username" value="ChessMasterFahad">
             <input type="password" class="auth-input" placeholder="Security Password" value="password123">
 
-            <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" id="auth-submit-btn" onclick="executeNativeLogin('Email')">Authenticate</button>
+            <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" id="auth-submit-btn" onclick="executeNativeLogin('Username')">Authenticate</button>
             <button class="btn-nav" style="border:none; margin-top:10px; font-size:12px; color:var(--text-muted);" onclick="document.getElementById('auth-modal').style.display='none'">Cancel</button>
-        </div>
-    </div>
-
-    <!-- Original Sandbox Popup Container preserved exclusively for Apple testing -->
-    <div class="mock-popup-window" id="oauth-popup">
-        <div class="popup-browser-bar">
-            <div class="browser-dots">
-                <div class="browser-dot red"></div>
-                <div class="browser-dot yellow"></div>
-                <div class="browser-dot green"></div>
-            </div>
-            <div class="browser-url-field" id="popup-url">https://accounts.google.com/o/oauth2/auth</div>
-        </div>
-        <div class="popup-main-body">
-            <div class="spinner" id="popup-spinner"></div>
-            <h3 style="margin: 0 0 8px 0; font-size: 18px;" id="popup-header">Connecting with Google</h3>
-            <p style="margin: 0; font-size: 13px; color: #5f6368; text-align: center;" id="popup-status">Establishing secure verification handshake...</p>
         </div>
     </div>
 
@@ -521,7 +445,7 @@
                     <div class="stat-lbl">Accuracy Score</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-val" id="elo-val" style="color:#e67e22;">1200</div>
+                    <div class="stat-val" id="elo-val" style="color:#e67e22;">500</div>
                     <div class="stat-lbl">Performance ELO</div>
                 </div>
             </div>
@@ -560,41 +484,42 @@
 
         var currentUserSession = null;
 
+        // 🧠 RECALIBRATED BOT RATING METRICS
         const botDatabase = {
             beginner: [
-                { id: "b1", name: "Toddler Timmy", elo: 600, avatar: "👶", desc: "Plays instantly, gets distracted easily, and frequently leaves pieces hanging.", blunderChance: 0.35, depth: 1 },
-                { id: "b2", name: "Whiskers", elo: 750, avatar: "🐱", desc: "Likes swatting at pieces randomly. Will chase lasers over preserving the Queen.", blunderChance: 0.25, depth: 1 },
-                { id: "b3", name: "Pawnawan", elo: 850, avatar: "♟️", desc: "Understands rules completely but misses basic fork and pinning checks completely.", blunderChance: 0.20, depth: 1 },
-                { id: "b4", name: "Coach Avocado", elo: 950, avatar: "🥑", desc: "Tries to focus on healthy development steps but crumbles under sudden tactics.", blunderChance: 0.15, depth: 1 },
-                { id: "b5", name: "Joey Pizza", elo: 1050, avatar: "🍕", desc: "A solid local street player who gets overconfident and loses material early.", blunderChance: 0.12, depth: 1 }
+                { id: "b1", name: "Toddler Timmy", elo: 200, avatar: "👶", desc: "Plays instantly, gets distracted easily, and frequently leaves pieces hanging.", blunderChance: 0.35, depth: 1 },
+                { id: "b2", name: "Whiskers", elo: 350, avatar: "🐱", desc: "Likes swatting at pieces randomly. Will chase lasers over preserving the Queen.", blunderChance: 0.25, depth: 1 },
+                { id: "b3", name: "Pawnawan", elo: 500, avatar: "♟️", desc: "Understands rules completely but misses basic fork and pinning checks completely.", blunderChance: 0.20, depth: 1 },
+                { id: "b4", name: "Coach Avocado", elo: 650, avatar: "🥑", desc: "Tries to focus on healthy development steps but crumbles under sudden tactics.", blunderChance: 0.15, depth: 1 },
+                { id: "b5", name: "Joey Pizza", elo: 800, avatar: "🍕", desc: "A solid local street player who gets overconfident and loses material early.", blunderChance: 0.12, depth: 1 }
             ],
             intermediate: [
-                { id: "i1", name: "Casual Carl", elo: 1150, avatar: "🧠", desc: "Plays balanced club chess. Captures free assets but misses long variations.", blunderChance: 0.10, depth: 2 },
-                { id: "i2", name: "Robin Hood", elo: 1250, avatar: "🏹", desc: "Extremely aggressive, loves sacrifices, often overextends his flank columns.", blunderChance: 0.08, depth: 2 },
-                { id: "i3", name: "Shield Maiden", elo: 1350, avatar: "🛡️", desc: "Ultra defensive setup profile. Hard to break down, but lacks offensive focus.", blunderChance: 0.07, depth: 2 },
-                { id: "i4", name: "Sparky", elo: 1450, avatar: "⚡", desc: "Lightning fast tactical moves. Finds checks easily but miscalculates deep endgames.", blunderChance: 0.06, depth: 2 },
-                { id: "i5", name: "The Tactician", elo: 1550, avatar: "⚔️", desc: "Actively scans for standard forks, absolute pins, and discoveries.", blunderChance: 0.05, depth: 2 }
+                { id: "i1", name: "Casual Carl", elo: 900, avatar: "🧠", desc: "Plays balanced club chess. Captures free assets but misses long variations.", blunderChance: 0.10, depth: 2 },
+                { id: "i2", name: "Robin Hood", elo: 1050, avatar: "🏹", desc: "Extremely aggressive, loves sacrifices, often overextends his flank columns.", blunderChance: 0.08, depth: 2 },
+                { id: "i3", name: "Shield Maiden", elo: 1200, avatar: "🛡️", desc: "Ultra defensive setup profile. Hard to break down, but lacks offensive focus.", blunderChance: 0.07, depth: 2 },
+                { id: "i4", name: "Sparky", elo: 1350, avatar: "⚡", desc: "Lightning fast tactical moves. Finds checks easily but miscalculates deep endgames.", blunderChance: 0.06, depth: 2 },
+                { id: "i5", name: "The Tactician", elo: 1500, avatar: "⚔️", desc: "Actively scans for standard forks, absolute pins, and discoveries.", blunderChance: 0.05, depth: 2 }
             ],
             expert: [
-                { id: "e1", name: "Knight Rider", elo: 1650, avatar: "🐴", desc: "Obsessed with outposting minor pieces. Avoids clean trades to maintain complications.", blunderChance: 0.03, depth: 2 },
+                { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting minor pieces. Avoids clean trades to maintain complications.", blunderChance: 0.03, depth: 2 },
                 { id: "e2", name: "The Geometer", elo: 1750, avatar: "📐", desc: "Plays sharp geometric lines. Excellent spatial awareness across open files.", blunderChance: 0.02, depth: 3 },
-                { id: "e3", name: "Sniper Sally", elo: 1850, avatar: "🎯", desc: "Fianchettos her bishops immediately, generating long-range tactical pressure.", blunderChance: 0.01, depth: 3 },
-                { id: "e4", name: "Deceptive Don", elo: 1950, avatar: "🎭", desc: "Sets subtle structural traps. Looks passive but strikes if you slacken pressure.", blunderChance: 0.01, depth: 3 },
-                { id: "e5", name: "The Strategist", elo: 2050, avatar: "📜", desc: "Flawless mid-game positioning. Controls files, structures pawn chains elegantly.", blunderChance: 0.00, depth: 3 }
+                { id: "e3", name: "Sniper Sally", elo: 1900, avatar: "🎯", desc: "Fianchettos her bishops immediately, generating long-range tactical pressure.", blunderChance: 0.01, depth: 3 },
+                { id: "e4", name: "Deceptive Don", elo: 2050, avatar: "🎭", desc: "Sets subtle structural traps. Looks passive but strikes if you slacken pressure.", blunderChance: 0.01, depth: 3 },
+                { id: "e5", name: "The Strategist", elo: 2200, avatar: "📜", desc: "Flawless mid-game positioning. Controls files, structures pawn chains elegantly.", blunderChance: 0.00, depth: 3 }
             ],
             gm: [
-                { id: "g1", name: "King Maker", elo: 2150, avatar: "👑", desc: "Brilliant endgame expert. Liquidates assets cleanly if it guarantees a winning endgame.", blunderChance: 0.00, depth: 3 },
-                { id: "g2", name: "Maestro Monsoon", elo: 2250, avatar: "🌪️", desc: "Crushing tactical storm profiles. Floods your king flank with massive attacking waves.", blunderChance: 0.00, depth: 3 },
-                { id: "g3", name: "Ice Queen", elo: 2350, avatar: "❄️", desc: "Cold, calculating approach. Freezes counter-play options before launching strikes.", blunderChance: 0.00, depth: 3 },
-                { id: "g4", name: "Zen Master", elo: 2450, avatar: "🧘", desc: "Flawless patience. Waits for minor weaknesses and punishes them seamlessly.", blunderChance: 0.00, depth: 3 },
-                { id: "g5", name: "GM Buddy", elo: 2550, avatar: "🦊", desc: "Highly accurate Grandmaster chess. Seamlessly blends strategy with lethal tactical traps.", blunderChance: 0.00, depth: 3 }
+                { id: "g1", name: "King Maker", elo: 2300, avatar: "👑", desc: "Brilliant endgame expert. Liquidates assets cleanly if it guarantees a winning endgame.", blunderChance: 0.00, depth: 3 },
+                { id: "g2", name: "Maestro Monsoon", elo: 2420, avatar: "🌪️", desc: "Crushing tactical storm profiles. Floods your king flank with massive attacking waves.", blunderChance: 0.00, depth: 3 },
+                { id: "g3", name: "Ice Queen", elo: 2550, avatar: "❄️", desc: "Cold, calculating approach. Freezes counter-play options before launching strikes.", blunderChance: 0.00, depth: 3 },
+                { id: "g4", name: "Zen Master", elo: 2680, avatar: "🧘", desc: "Flawless patience. Waits for minor weaknesses and punishes them seamlessly.", blunderChance: 0.00, depth: 3 },
+                { id: "g5", name: "GM Buddy", elo: 2800, avatar: "🦊", desc: "Highly accurate Grandmaster chess. Seamlessly blends strategy with lethal tactical traps.", blunderChance: 0.00, depth: 3 }
             ],
             supergm: [
-                { id: "s1", name: "Volcano Magnus", elo: 2650, avatar: "🌋", desc: "Slow positional pressure that completely suffocates space choices.", blunderChance: 0.00, depth: 3 },
-                { id: "s2", name: "Deep Sight", elo: 2750, avatar: "👁️", desc: "Incredible lookahead mapping engine. Predicts and punches deep tactical lines.", blunderChance: 0.00, depth: 4 },
-                { id: "s3", name: "Cosmic Entity", elo: 2850, avatar: "🪐", desc: "Unorthodox, hyper-modern lines that confuse human opening frameworks easily.", blunderChance: 0.00, depth: 4 },
-                { id: "s4", name: "Quantum Shock", elo: 2950, avatar: "⚡", desc: "Devastating dynamic chess calculations. Exploits tiny defensive gaps instantly.", blunderChance: 0.00, depth: 4 },
-                { id: "s5", name: "Matrix Overlord", elo: 3100, avatar: "🛸", desc: "Pure computational perfection. Simulated to mirror maximum engine capabilities.", blunderChance: 0.00, depth: 4 }
+                { id: "s1", name: "Volcano Magnus", elo: 2950, avatar: "🌋", desc: "Slow positional pressure that completely suffocates space choices.", blunderChance: 0.00, depth: 3 },
+                { id: "s2", name: "Deep Sight", elo: 3100, avatar: "👁️", desc: "Incredible lookahead mapping engine. Predicts and punches deep tactical lines.", blunderChance: 0.00, depth: 4 },
+                { id: "s3", name: "Cosmic Entity", elo: 3220, avatar: "🪐", desc: "Unorthodox, hyper-modern lines that confuse human opening frameworks easily.", blunderChance: 0.00, depth: 4 },
+                { id: "s4", name: "Quantum Shock", elo: 3350, avatar: "⚡", desc: "Devastating dynamic chess calculations. Exploits tiny defensive gaps instantly.", blunderChance: 0.00, depth: 4 },
+                { id: "s5", name: "Matrix Overlord", elo: 3500, avatar: "🛸", desc: "Pure computational perfection. Simulated to mirror maximum engine capabilities.", blunderChance: 0.00, depth: 4 }
             ]
         };
 
@@ -625,10 +550,8 @@
             }
         }
 
-        // 🚀 OFFICIAL GOOGLE ACCESS TOKEN PROCESSOR DISPATCHER
         function handleGoogleSignInResponse(response) {
             console.log("Secure Identity verification token received from Google servers!");
-
             try {
                 const base64Url = response.credential.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -637,13 +560,11 @@
                 }).join(''));
 
                 const googleUser = JSON.parse(jsonPayload);
-                console.log("Decoded Profile Identity Payload:", googleUser);
-
                 document.getElementById('auth-modal').style.display = 'none';
 
                 currentUserSession = {
                     username: googleUser.name || googleUser.email.split('@')[0],
-                    displayElo: 1200,
+                    displayElo: 500, // 🚀 BASELINE ELO UPDATED TO 500
                     avatar: googleUser.picture || "🦊"
                 };
 
@@ -656,57 +577,19 @@
                 } else {
                     $('.user-avatar').text("🦊");
                 }
-
                 $('#logged-in-view').css('display', 'flex');
-
             } catch (err) {
                 console.error("Failed parsing Google verification structure:", err);
             }
         }
 
-        function triggerOAuthFlow(provider) {
-            document.getElementById('auth-modal').style.display = 'none';
-            
-            var winBox = document.getElementById('oauth-popup');
-            var urlField = document.getElementById('popup-url');
-            var header = document.getElementById('popup-header');
-            var status = document.getElementById('popup-status');
-            var spinner = document.getElementById('popup-spinner');
-
-            if (provider === 'Google') {
-                urlField.innerText = "https://accounts.google.com/o/oauth2/v2/auth";
-                header.innerText = "Sign in with Google";
-            } else {
-                urlField.innerText = "https://appleid.apple.com/auth/authorize";
-                header.innerText = "Sign in with Apple ID";
-            }
-
-            status.innerHTML = "Opening secure link validation tunnel...<br>Please wait.";
-            spinner.style.display = "block";
-            winBox.style.display = "flex";
-
-            setTimeout(function() {
-                status.innerText = "Requesting secure token handshake authorization key...";
-            }, 1200);
-
-            setTimeout(function() {
-                status.innerText = "Finalizing account token synchronization variables...";
-            }, 2400);
-
-            setTimeout(function() {
-                winBox.style.display = "none";
-                executeNativeLogin(provider);
-            }, 3500);
-        }
-
         function executeNativeLogin(provider) {
-            let emailValue = document.getElementById('auth-email').value || "notmustafa.fahad@gmail.com";
-            let derivedUsername = emailValue.split('@')[0];
+            let userValue = document.getElementById('auth-username').value || "ChessMasterFahad";
             
             currentUserSession = {
-                username: derivedUsername,
-                displayElo: 1200,
-                avatar: provider === 'Apple' ? '🍎' : '📝'
+                username: userValue,
+                displayElo: 500, // 🚀 BASELINE ELO UPDATED TO 500
+                avatar: '📝'
             };
 
             document.getElementById('auth-modal').style.display = 'none';
@@ -721,6 +604,7 @@
         function triggerLogout() {
             currentUserSession = null;
             $('.user-avatar').html("🦊");
+            document.getElementById('profile-display-elo').innerText = "500";
             document.getElementById('logged-in-view').style.display = 'none';
             document.getElementById('logged-out-view').style.display = 'flex';
         }
@@ -906,8 +790,9 @@
             }
 
             var finalAccuracy = userMoves > 0 ? Math.min(100, Math.max(0, Math.round(userScoreWeight / userMoves))) : 100;
-            var baseRating = isLocalFriendMode ? 1400 : activeBot.elo;
+            var baseRating = isLocalFriendMode ? 500 : activeBot.elo;
             var estimatedPerformance = Math.round(baseRating + ((finalAccuracy - 70) * 12));
+            if (estimatedPerformance < 100) estimatedPerformance = 100;
 
             document.getElementById('accuracy-val').innerText = finalAccuracy + "%";
             document.getElementById('elo-val').innerText = estimatedPerformance;
