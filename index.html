@@ -7,7 +7,6 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     
-    <!-- 🚀 REAL GOOGLE AUTH TOOL INJECTION -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <style>
@@ -198,6 +197,30 @@
         .bot-desc { font-size: 13px; color: #aaa; margin: 4px 0 0 0; line-height: 1.4; }
         .bot-elo-badge { background: rgba(129, 182, 76, 0.15); color: var(--chess-green); font-weight: 700; font-size: 14px; padding: 6px 16px; border-radius: 4px; border: 1px solid rgba(129, 182, 76, 0.3); }
 
+        /* TIME CONTROL SELECTOR CSS */
+        .time-selector-container {
+            display: flex;
+            gap: 10px;
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #2a2a2a;
+        }
+        .time-btn {
+            background: #252525;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .time-btn.active {
+            background: var(--chess-green);
+            border-color: var(--chess-green);
+        }
+
         /* SCREEN 3: GAME ARENA */
         #game-screen { justify-content: flex-start; }
         .app-layout {
@@ -210,8 +233,77 @@
             margin-top: 20px;
         }
 
-        .board-container { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        .board-container { display: flex; flex-direction: column; gap: 15px; align-items: center; position: relative; }
         
+        /* PLAY LAYOUT WITH EVAL BAR SIDE-BY-SIDE */
+        .play-area-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* 📊 EVALUATION BAR STYLE */
+        .eval-bar-container {
+            width: 14px;
+            height: 450px;
+            background: #222; /* Black side */
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* White builds up from bottom */
+            border: 1px solid #333;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .eval-bar-white {
+            width: 100%;
+            height: 50%; /* Starts perfectly even 50-50 */
+            background: #fff;
+            transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* ⏱️ CHESS CLOCK PLAYER STANDS */
+        .clock-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 450px;
+            max-width: 90vw;
+            background: #1a1a1a;
+            padding: 8px 14px;
+            border-radius: 4px;
+            border: 1px solid #2d2d2d;
+            box-sizing: border-box;
+        }
+        .player-info { font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .clock-timer {
+            background: #2c2c2c;
+            color: #fff;
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            letter-spacing: 0.5px;
+        }
+        .clock-timer.running {
+            color: #ffb703;
+            border-color: #ffb703;
+            background: rgba(255, 183, 3, 0.05);
+        }
+        .clock-timer.low-time {
+            color: #b43c3c;
+            border-color: #b43c3c;
+            animation: pulse-red 1s infinite alternate;
+        }
+
+        @keyframes pulse-red {
+            from { background: rgba(180, 60, 60, 0.1); }
+            to { background: rgba(180, 60, 60, 0.3); }
+        }
+
         .panel {
             display: flex;
             justify-content: space-between;
@@ -235,7 +327,7 @@
 
         .sidebar {
             width: 380px;
-            height: 540px;
+            height: 590px;
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -294,6 +386,7 @@
         @media (max-width: 860px) {
             .app-layout { flex-direction: column; align-items: center; }
             .sidebar { width: 450px; max-width: 90vw; height: 350px; }
+            .eval-bar-container { height: 350px; }
         }
     </style>
 </head>
@@ -335,10 +428,16 @@
 
 
     <div class="screen" id="lobby-screen">
-        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-shrink: 0;">
+        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-shrink: 0; flex-wrap: wrap; gap: 15px;">
             <button id="home-btn" onclick="switchScreen('home-screen')">◀ Return Home</button>
+            
+            <div class="time-selector-container">
+                <button class="time-btn" onclick="selectTimeControl(60, this)">1 Min (Bullet)</button>
+                <button class="time-btn active" onclick="selectTimeControl(180, this)">3 Min (Blitz)</button>
+                <button class="time-btn" onclick="selectTimeControl(600, this)">10 Min (Rapid)</button>
+            </div>
+            
             <h1 style="margin:0; color: var(--chess-green); font-size: 26px; font-weight: 800;">Select Your Opponent</h1>
-            <div style="width:115px;"></div>
         </div>
         
         <div class="lobby-container">
@@ -377,11 +476,28 @@
                     <h2 id="matchup-header" style="margin:0; font-size:18px; text-align: left;">Playing Match</h2>
                     <button id="leave-btn" onclick="quitActiveMatch()">◀ Exit Match</button>
                 </div>
+                
                 <div class="panel">
                     <div id="status">White to move</div>
                     <button id="restart-btn" onclick="resetGame()">Restart</button>
                 </div>
-                <div id="my-board"></div>
+
+                <div class="clock-container">
+                    <div class="player-info"><span id="top-clock-avatar">🤖</span> <span id="top-clock-name">Opponent</span></div>
+                    <div class="clock-timer" id="clock-black">03:00</div>
+                </div>
+
+                <div class="play-area-wrapper">
+                    <div class="eval-bar-container">
+                        <div class="eval-bar-white" id="live-eval-fill"></div>
+                    </div>
+                    <div id="my-board"></div>
+                </div>
+
+                <div class="clock-container">
+                    <div class="player-info"><span id="bottom-clock-avatar">🦊</span> <span id="bottom-clock-name">You</span></div>
+                    <div class="clock-timer" id="clock-white">03:00</div>
+                </div>
             </div>
 
             <div class="sidebar">
@@ -436,7 +552,7 @@
 
     <div class="modal-overlay" id="gameover-modal">
         <div class="modal-card">
-            <h2 style="margin-top:0; color:#e67e22;">Game Finished!</h2>
+            <h2 style="margin-top:0; color:#e67e22;" id="gameover-title">Game Finished!</h2>
             <p style="font-size:13px; color:#aaa; margin-bottom:15px;">Your chess analytics performance scorecard is compiled below.</p>
             
             <div class="stat-grid">
@@ -484,7 +600,13 @@
 
         var currentUserSession = null;
 
-        // 🧠 RECALIBRATED BOT RATING METRICS
+        // ⏱️ CLOCK ENGINE CONTROL TRACKERS
+        var chosenDurationSeconds = 180; // Defaults to 3 Min
+        var whiteTimeRemaining = 180;
+        var blackTimeRemaining = 180;
+        var clockCountdownInterval = null;
+        var gameHasEnded = false;
+
         const botDatabase = {
             beginner: [
                 { id: "b1", name: "Toddler Timmy", elo: 200, avatar: "👶", desc: "Plays instantly, gets distracted easily, and frequently leaves pieces hanging.", blunderChance: 0.35, depth: 1 },
@@ -522,6 +644,12 @@
                 { id: "s5", name: "Matrix Overlord", elo: 3500, avatar: "🛸", desc: "Pure computational perfection. Simulated to mirror maximum engine capabilities.", blunderChance: 0.00, depth: 4 }
             ]
         };
+
+        function selectTimeControl(seconds, element) {
+            chosenDurationSeconds = seconds;
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            element.classList.add('active');
+        }
 
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
@@ -564,7 +692,7 @@
 
                 currentUserSession = {
                     username: googleUser.name || googleUser.email.split('@')[0],
-                    displayElo: 500, // 🚀 BASELINE ELO UPDATED TO 500
+                    displayElo: 500, 
                     avatar: googleUser.picture || "🦊"
                 };
 
@@ -588,7 +716,7 @@
             
             currentUserSession = {
                 username: userValue,
-                displayElo: 500, // 🚀 BASELINE ELO UPDATED TO 500
+                displayElo: 500, 
                 avatar: '📝'
             };
 
@@ -638,6 +766,12 @@
             activeBot = botObj;
             isLocalFriendMode = false;
             document.getElementById("matchup-header").innerText = `Match vs ${activeBot.avatar} ${activeBot.name} (${activeBot.elo})`;
+            
+            document.getElementById("top-clock-avatar").innerText = activeBot.avatar;
+            document.getElementById("top-clock-name").innerText = `${activeBot.name} (${activeBot.elo})`;
+            document.getElementById("bottom-clock-avatar").innerText = currentUserSession ? currentUserSession.avatar : "🦊";
+            document.getElementById("bottom-clock-name").innerText = currentUserSession ? currentUserSession.username : "You";
+
             switchScreen('game-screen');
             resetGame();
         }
@@ -646,11 +780,18 @@
             activeBot = null;
             isLocalFriendMode = true;
             document.getElementById("matchup-header").innerText = "Local Match: Pass & Play";
+            
+            document.getElementById("top-clock-avatar").innerText = "👤";
+            document.getElementById("top-clock-name").innerText = "Player 2 (Black)";
+            document.getElementById("bottom-clock-avatar").innerText = "👤";
+            document.getElementById("bottom-clock-name").innerText = "Player 1 (White)";
+
             switchScreen('game-screen');
             resetGame();
         }
 
         function quitActiveMatch() {
+            clearInterval(clockCountdownInterval);
             if (isLocalFriendMode) { switchScreen('home-screen'); } 
             else { switchScreen('lobby-screen'); }
         }
@@ -705,11 +846,85 @@
             }
         }
 
+        // 📊 RUN LIVE POSITIONAL ANALYSIS FOR THE VISUAL EVAL BAR
+        function updateLiveEvaluationBar() {
+            if (game.game_over() || gameHasEnded) return;
+            
+            // Analyze 1-move deep instantly to avoid lagging the UI layout
+            var currentScore = minimax(1, -1000000, 1000000, (game.turn() === 'w'));
+            
+            // Map score to percentage layout (Centipawns base conversion)
+            var pawnAdvantage = currentScore / 100;
+            
+            // Clamp evaluations safely between +8 and -8 advantage lines
+            var midPointPercentage = 50;
+            var visualOffset = pawnAdvantage * 5; // 1 pawn equals 5% shift
+            var finalWhiteFill = midPointPercentage + visualOffset;
+            
+            if (finalWhiteFill > 96) finalWhiteFill = 96;
+            if (finalWhiteFill < 4) finalWhiteFill = 4;
+            
+            document.getElementById('live-eval-fill').style.height = finalWhiteFill + '%';
+        }
+
+        // ⏱️ CHESS TIMING INTERVAL COMPRESSION PIPELINE
+        function formatClockString(totalSeconds) {
+            var mins = Math.floor(totalSeconds / 60);
+            var secs = totalSeconds % 60;
+            return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+        }
+
+        function startClockCountdownLoop() {
+            clearInterval(clockCountdownInterval);
+            clockCountdownInterval = setInterval(function() {
+                if (game.game_over() || gameHasEnded) {
+                    clearInterval(clockCountdownInterval);
+                    return;
+                }
+
+                if (game.turn() === 'w') {
+                    whiteTimeRemaining--;
+                    document.getElementById('clock-white').innerText = formatClockString(whiteTimeRemaining);
+                    document.getElementById('clock-white').classList.add('running');
+                    document.getElementById('clock-black').classList.remove('running');
+                    
+                    if (whiteTimeRemaining <= 15) document.getElementById('clock-white').classList.add('low-time');
+                    if (whiteTimeRemaining <= 0) handleTimeoutDefeat('w');
+                } else {
+                    blackTimeRemaining--;
+                    document.getElementById('clock-black').innerText = formatClockString(blackTimeRemaining);
+                    document.getElementById('clock-black').classList.add('running');
+                    document.getElementById('clock-white').classList.remove('running');
+                    
+                    if (blackTimeRemaining <= 15) document.getElementById('clock-black').classList.add('low-time');
+                    if (blackTimeRemaining <= 0) handleTimeoutDefeat('b');
+                }
+            }, 1000);
+        }
+
+        function handleTimeoutDefeat(losingColor) {
+            clearInterval(clockCountdownInterval);
+            gameHasEnded = true;
+            document.getElementById('clock-white').classList.remove('running');
+            document.getElementById('clock-black').classList.remove('running');
+
+            var bannerTitle = (losingColor === 'w') ? "Lost on Time! ⏱️" : "Victory on Time! 🎉";
+            if (isLocalFriendMode) bannerTitle = (losingColor === 'w') ? "Black Wins on Time!" : "White Wins on Time!";
+            
+            document.getElementById('gameover-title').innerText = bannerTitle;
+            compileGameSummary();
+        }
+
         function updateStatusAndLog() {
             var statusText = "";
-            if (game.game_over() && !isReviewMode) {
+            if ((game.game_over() || gameHasEnded) && !isReviewMode) {
                 statusText = "Match Complete! Processing calculations...";
-                setTimeout(compileGameSummary, 600);
+                clearInterval(clockCountdownInterval);
+                if (!gameHasEnded) {
+                    gameHasEnded = true;
+                    document.getElementById('gameover-title').innerText = "Game Finished!";
+                    setTimeout(compileGameSummary, 600);
+                }
             } else if (isReviewMode) {
                 statusText = `Reviewing Move ${reviewCurrentIndex + 1} / ${reviewHistoryList.length}`;
             } else {
@@ -746,189 +961,4 @@
             reviewHistoryList = game.history();
             var rawMoves = game.history({ verbose: true });
             var testGame = new Chess();
-            var evals = [0];
-
-            for (var i=0; i<reviewHistoryList.length; i++) {
-                testGame.move(reviewHistoryList[i]);
-                evals.push(minimax(1, -1000000, 1000000, (testGame.turn() === 'w')));
-            }
-
-            stats = { best: 0, good: 0, mistake: 0, blunder: 0 };
-            reviewClassifications = []; reviewReasonings = []; reviewEvaluations = [];
-            var userMoves = 0, userScoreWeight = 0;
-
-            for (var i=0; i<reviewHistoryList.length; i++) {
-                var moveObj = rawMoves[i];
-                var drop = (moveObj.color === 'w') ? (evals[i] - evals[i+1]) : (evals[i+1] - evals[i]);
-
-                var badge = '<span class="badge badge-good">Good</span>';
-                var pro = "Maintains development parameters.";
-                var con = "Misses slightly quicker dynamic center variations.";
-                var moveVal = 70;
-
-                if (drop >= 180) {
-                    badge = '<span class="badge badge-blunder">🔴 Blunder</span>'; stats.blunder++; moveVal = 10;
-                    pro = "Changes material tracking lines.";
-                    con = `Left vital pieces exposed to sudden capture tactics!`;
-                } else if (drop >= 90) {
-                    badge = '<span class="badge badge-mistake">🟠 Mistake</span>'; stats.mistake++; moveVal = 40;
-                    pro = "Pushes lines forward.";
-                    con = "Gives up active structural board pressure.";
-                } else if (drop <= -5) {
-                    badge = '<span class="badge badge-best">✨ Best</span>'; stats.best++; moveVal = 95;
-                    pro = "Highly accurate engine matching choice!";
-                    con = "None.";
-                } else {
-                    stats.good++;
-                }
-
-                reviewClassifications.push(badge);
-                reviewEvaluations.push((evals[i+1]/100).toFixed(2));
-                reviewReasonings.push(`<strong>PRO:</strong> ${pro}<br><span class="con-tip"><strong>CON:</strong> ${con}</span>`);
-
-                if (moveObj.color === 'w') { userMoves++; userScoreWeight += moveVal; }
-            }
-
-            var finalAccuracy = userMoves > 0 ? Math.min(100, Math.max(0, Math.round(userScoreWeight / userMoves))) : 100;
-            var baseRating = isLocalFriendMode ? 500 : activeBot.elo;
-            var estimatedPerformance = Math.round(baseRating + ((finalAccuracy - 70) * 12));
-            if (estimatedPerformance < 100) estimatedPerformance = 100;
-
-            document.getElementById('accuracy-val').innerText = finalAccuracy + "%";
-            document.getElementById('elo-val').innerText = estimatedPerformance;
-            document.getElementById('cnt-best').innerText = stats.best;
-            document.getElementById('cnt-good').innerText = stats.good;
-            document.getElementById('cnt-mistake').innerText = stats.mistake;
-            document.getElementById('cnt-blunder').innerText = stats.blunder;
-
-            if (currentUserSession) {
-                currentUserSession.sessionElo = estimatedPerformance;
-                document.getElementById('profile-display-elo').innerText = estimatedPerformance;
-            }
-
-            document.getElementById('gameover-modal').style.display = 'flex';
-        }
-
-        function closeModalAndExit() {
-            document.getElementById('gameover-modal').style.display = 'none';
-            quitActiveMatch();
-        }
-
-        function startReviewFromModal() {
-            document.getElementById('gameover-modal').style.display = 'none';
-            isReviewMode = true;
-            document.getElementById('review-controls').style.display = 'flex';
-            reviewMove(0);
-        }
-
-        function reviewMove(dir) {
-            var target = reviewCurrentIndex + dir;
-            if (target < -1 || target >= reviewHistoryList.length) return;
-            reviewCurrentIndex = target;
-
-            var rGame = new Chess();
-            for (var i=0; i<=reviewCurrentIndex; i++) { rGame.move(reviewHistoryList[i]); }
-            board.position(rGame.fen());
-            playSound(false);
-
-            if (reviewCurrentIndex >= 0) {
-                document.getElementById('review-reasoning').innerHTML = `<strong>Balance Score:</strong> ${reviewEvaluations[reviewCurrentIndex]}<br>${reviewReasonings[reviewCurrentIndex]}`;
-            } else {
-                document.getElementById('review-reasoning').innerHTML = "Starting Position lines. Navigate variations using tracks below.";
-            }
-            updateStatusAndLog();
-        }
-
-        function makeBotMove() {
-            if (game.game_over() || isLocalFriendMode) { updateStatusAndLog(); return; }
-            var moves = game.moves();
-
-            if (Math.random() < activeBot.blunderChance) {
-                moves.sort(() => 0.5 - Math.random());
-                for (var i=0; i<moves.length; i++) {
-                    if (!moves[i].includes('x') && !moves[i].includes('#')) {
-                        var m = game.move(moves[i]);
-                        board.position(game.fen());
-                        playSound(m && m.captured);
-                        updateStatusAndLog();
-                        return;
-                    }
-                }
-            }
-
-            moves.sort(() => 0.5 - Math.random());
-            var bestMove = null;
-            var isBotWhite = game.turn() === 'w';
-            var bestValue = isBotWhite ? -999999 : 999999;
-
-            for (var i=0; i<moves.length; i++) {
-                game.move(moves[i]);
-                var val = minimax(activeBot.depth - 1, -1000000, 1000000, !isBotWhite);
-                game.undo();
-                if (isBotWhite ? (val > bestValue) : (val < bestValue)) { bestValue = val; bestMove = moves[i]; }
-            }
-
-            var details = game.move(bestMove || moves[0]);
-            board.position(game.fen());
-            playSound(details && details.captured);
-            updateStatusAndLog();
-        }
-
-        function onDrop(source, target, piece) {
-            if (isReviewMode) return 'snapback';
-            if (!isLocalFriendMode && (game.turn() !== 'w' || !piece.startsWith('w'))) return 'snapback';
-            
-            var move = game.move({ from: source, to: target, promotion: 'q' });
-            if (move === null) return 'snapback';
-
-            playSound(move.captured || move.flags.includes('e'));
-            updateStatusAndLog();
-
-            window.setTimeout(() => {
-                board.position(game.fen());
-                if (!isLocalFriendMode) { window.setTimeout(makeBotMove, 250); }
-            }, 250);
-        }
-
-        function resetGame() {
-            isReviewMode = false;
-            reviewHistoryList = []; reviewClassifications = []; reviewReasonings = []; reviewEvaluations = [];
-            reviewCurrentIndex = -1;
-            document.getElementById('review-controls').style.display = 'none';
-            document.getElementById('gameover-modal').style.display = 'none';
-            game.reset();
-            board.start();
-            updateStatusAndLog();
-        }
-
-        window.onload = function() {
-            showcaseBoard = Chessboard('showcase-board', { 
-                position: 'start', 
-                draggable: false, 
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png' 
-            });
-            
-            board = Chessboard('my-board', { 
-                position: 'start', 
-                draggable: true, 
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png', 
-                onDrop: onDrop 
-            });
-            
-            initVerticalLobby();
-            
-            if (currentUserSession) {
-                document.getElementById('profile-display-name').innerText = currentUserSession.username;
-                document.getElementById('profile-display-elo').innerText = currentUserSession.displayElo;
-                document.getElementById('logged-out-view').style.display = 'none';
-                document.getElementById('logged-in-view').style.display = 'flex';
-            }
-            
-            setTimeout(function() {
-                showcaseBoard.resize();
-                board.resize();
-            }, 100);
-        };
-    </script>
-</body>
-</html>
+            var evals
