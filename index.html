@@ -7,7 +7,6 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     
-    <!-- 🚀 REAL GOOGLE AUTH TOOL INJECTION -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <style>
@@ -198,17 +197,66 @@
         .bot-desc { font-size: 13px; color: #aaa; margin: 4px 0 0 0; line-height: 1.4; }
         .bot-elo-badge { background: rgba(129, 182, 76, 0.15); color: var(--chess-green); font-weight: 700; font-size: 14px; padding: 6px 16px; border-radius: 4px; border: 1px solid rgba(129, 182, 76, 0.3); }
 
+        /* TIME CONTROL SELECTOR BAR */
+        .time-config-strip {
+            display: flex; gap: 10px; background: var(--panel-bg); border: 1px solid var(--border-color);
+            padding: 12px 20px; border-radius: 8px; width: 100%; box-sizing: border-box;
+            align-items: center; margin-bottom: 20px; justify-content: flex-start;
+        }
+        .time-pill {
+            background: var(--card-bg); border: 1px solid #333; color: var(--text-muted);
+            padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;
+        }
+        .time-pill.active { background: var(--chess-green); color: #fff; border-color: var(--chess-green); }
+
         /* SCREEN 3: GAME ARENA */
         #game-screen { justify-content: flex-start; }
         .app-layout {
             display: flex;
             flex-direction: row;
-            gap: 30px;
+            gap: 20px;
             justify-content: center;
             align-items: flex-start;
             width: 100%;
             margin-top: 20px;
         }
+
+        /* LIVE EVALUATION METER COMPONENT */
+        .eval-bar-wrapper {
+            width: 24px;
+            height: 450px;
+            background: #111;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+        }
+        .eval-black-half {
+            background: #222;
+            width: 100%;
+            transition: height 0.3s ease;
+            height: 50%;
+        }
+        .eval-white-half {
+            background: #fff;
+            width: 100%;
+            flex-grow: 1;
+        }
+        .eval-text-indicator {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            left: 0;
+            font-size: 10px;
+            font-weight: 900;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .eval-text-top { top: 6px; color: #fff; }
+        .eval-text-bottom { bottom: 6px; color: #111; }
 
         .board-container { display: flex; flex-direction: column; gap: 15px; align-items: center; }
         
@@ -232,6 +280,14 @@
             border-radius: 6px;
             overflow: hidden;
         }
+
+        /* INTEGRATED ACTIVE CLOCK LABELS */
+        .clock-container {
+            background: #151515; border: 1px solid #333; padding: 6px 14px;
+            border-radius: 4px; font-family: monospace; font-size: 18px; font-weight: bold;
+            color: #ff5252; min-width: 70px; text-align: center;
+        }
+        .clock-container.active-turn { background: rgba(129, 182, 76, 0.15); border-color: var(--chess-green); color: var(--chess-green); }
 
         .sidebar {
             width: 380px;
@@ -294,6 +350,9 @@
         @media (max-width: 860px) {
             .app-layout { flex-direction: column; align-items: center; }
             .sidebar { width: 450px; max-width: 90vw; height: 350px; }
+            .eval-bar-wrapper { width: 450px; height: 16px; flex-direction: row; }
+            .eval-black-half { height: 100%; width: 50%; }
+            .eval-white-half { height: 100%; }
         }
     </style>
 </head>
@@ -340,6 +399,14 @@
             <h1 style="margin:0; color: var(--chess-green); font-size: 26px; font-weight: 800;">Select Your Opponent</h1>
             <div style="width:115px;"></div>
         </div>
+
+        <div class="time-config-strip">
+            <span style="font-size:14px; font-weight:bold; color:var(--text-muted); margin-right:10px;">🕒 Match Timer:</span>
+            <div class="time-pill active" onclick="selectTimeFormat(this, 60)">Bullet (1m)</div>
+            <div class="time-pill" onclick="selectTimeFormat(this, 180)">Blitz (3m)</div>
+            <div class="time-pill" onclick="selectTimeFormat(this, 600)">Rapid (10m)</div>
+            <div class="time-pill" onclick="selectTimeFormat(this, 1800)">Classical (30m)</div>
+        </div>
         
         <div class="lobby-container">
             <div class="rank-section">
@@ -372,9 +439,18 @@
 
     <div class="screen" id="game-screen">
         <div class="app-layout">
+            
+            <div class="eval-bar-wrapper">
+                <div class="eval-text-indicator eval-text-top" id="eval-txt-black">0.0</div>
+                <div class="eval-black-half" id="eval-gauge-black"></div>
+                <div class="eval-white-half"></div>
+                <div class="eval-text-indicator eval-text-bottom" id="eval-txt-white">+0.0</div>
+            </div>
+
             <div class="board-container">
                 <div style="display:flex; justify-content:space-between; align-items:center; width: 100%;">
-                    <h2 id="matchup-header" style="margin:0; font-size:18px; text-align: left;">Playing Match</h2>
+                    <div id="bot-clock-label" class="clock-container">01:00</div>
+                    <h2 id="matchup-header" style="margin:0; font-size:16px; text-align: center; flex-grow:1;">Playing Match</h2>
                     <button id="leave-btn" onclick="quitActiveMatch()">◀ Exit Match</button>
                 </div>
                 <div class="panel">
@@ -382,6 +458,9 @@
                     <button id="restart-btn" onclick="resetGame()">Restart</button>
                 </div>
                 <div id="my-board"></div>
+                <div style="display:flex; justify-content:flex-start; width:100%; margin-top:5px;">
+                    <div id="player-clock-label" class="clock-container active-turn">01:00</div>
+                </div>
             </div>
 
             <div class="sidebar">
@@ -436,7 +515,7 @@
 
     <div class="modal-overlay" id="gameover-modal">
         <div class="modal-card">
-            <h2 style="margin-top:0; color:#e67e22;">Game Finished!</h2>
+            <h2 style="margin-top:0; color:#e67e22;" id="gameover-title">Game Finished!</h2>
             <p style="font-size:13px; color:#aaa; margin-bottom:15px;">Your chess analytics performance scorecard is compiled below.</p>
             
             <div class="stat-grid">
@@ -484,7 +563,14 @@
 
         var currentUserSession = null;
 
-        // 🧠 RECALIBRATED BOT RATING METRICS
+        // 🕒 CHESS CLOCK LOGIC STATE VARIANCE
+        var selectedDurationSeconds = 60; 
+        var playerTimeRemaining = 60;
+        var botTimeRemaining = 60;
+        var chessClockIntervalId = null;
+        var isClockTimeoutTermination = false;
+        var timeoutWinner = null;
+
         const botDatabase = {
             beginner: [
                 { id: "b1", name: "Toddler Timmy", elo: 200, avatar: "👶", desc: "Plays instantly, gets distracted easily, and frequently leaves pieces hanging.", blunderChance: 0.35, depth: 1 },
@@ -533,6 +619,12 @@
             }, 50);
         }
 
+        function selectTimeFormat(element, seconds) {
+            document.querySelectorAll('.time-pill').forEach(pill => pill.classList.remove('active'));
+            element.classList.add('active');
+            selectedDurationSeconds = seconds;
+        }
+
         function openAuthModal(mode) {
             if (mode === 'login') {
                 document.getElementById('auth-title').innerText = 'Welcome Back';
@@ -564,7 +656,7 @@
 
                 currentUserSession = {
                     username: googleUser.name || googleUser.email.split('@')[0],
-                    displayElo: 500, // 🚀 BASELINE ELO UPDATED TO 500
+                    displayElo: 500, 
                     avatar: googleUser.picture || "🦊"
                 };
 
@@ -588,7 +680,7 @@
             
             currentUserSession = {
                 username: userValue,
-                displayElo: 500, // 🚀 BASELINE ELO UPDATED TO 500
+                displayElo: 500, 
                 avatar: '📝'
             };
 
@@ -651,6 +743,7 @@
         }
 
         function quitActiveMatch() {
+            clearInterval(chessClockIntervalId);
             if (isLocalFriendMode) { switchScreen('home-screen'); } 
             else { switchScreen('lobby-screen'); }
         }
@@ -705,8 +798,79 @@
             }
         }
 
+        // 📊 LIVE ENGINE EVALUATION UPDATER ENGINE
+        function triggerRealtimeEvaluationUpdate() {
+            if (isReviewMode) return;
+            
+            // Calculate standard depth evaluation score
+            var currentTurnIsWhite = game.turn() === 'w';
+            var rawScore = minimax(1, -1000000, 1000000, currentTurnIsWhite);
+            
+            // Convert centipawns to standard display units
+            var standardEvalValue = (rawScore / 100).toFixed(1);
+            
+            // Format labels text
+            if (rawScore >= 0) {
+                document.getElementById('eval-txt-white').innerText = "+" + standardEvalValue;
+                document.getElementById('eval-txt-black').innerText = "";
+            } else {
+                document.getElementById('eval-txt-white').innerText = "";
+                document.getElementById('eval-txt-black').innerText = standardEvalValue;
+            }
+            
+            // Map score dynamically onto a percentage-based 0% to 100% boundary limit
+            // Normal range targets center around +/- 5 pawns advantage bounds
+            var capScore = Math.max(-500, Math.min(500, rawScore));
+            var blackPercentageHeight = 50 - (capScore / 500) * 50;
+            
+            document.getElementById('eval-gauge-black').style.height = blackPercentageHeight + "%";
+        }
+
+        // ⏱️ TIMER COUNTER DISPLAY FORMATTING STYLES
+        function stringifyClockTime(totalSeconds) {
+            var mins = Math.floor(totalSeconds / 60);
+            var secs = totalSeconds % 60;
+            return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+        }
+
+        function runClockTickEngine() {
+            if (game.game_over() || isReviewMode) return;
+
+            if (game.turn() === 'w') {
+                playerTimeRemaining--;
+                document.getElementById('player-clock-label').innerText = stringifyClockTime(playerTimeRemaining);
+                if (playerTimeRemaining <= 0) {
+                    executeClockTimeoutLoss('w');
+                }
+            } else {
+                botTimeRemaining--;
+                document.getElementById('bot-clock-label').innerText = stringifyClockTime(botTimeRemaining);
+                if (botTimeRemaining <= 0) {
+                    executeClockTimeoutLoss('b');
+                }
+            }
+        }
+
+        function executeClockTimeoutLoss(losingColor) {
+            clearInterval(chessClockIntervalId);
+            isClockTimeoutTermination = true;
+            timeoutWinner = (losingColor === 'w') ? 'Black' : 'White';
+            document.getElementById('status').innerText = `Timeout! ${timeoutWinner} wins on time.`;
+            compileGameSummary();
+        }
+
         function updateStatusAndLog() {
             var statusText = "";
+            
+            // Manage dynamic highlighting targets around active clock panels
+            if (game.turn() === 'w') {
+                document.getElementById('player-clock-label').classList.add('active-turn');
+                document.getElementById('bot-clock-label').classList.remove('active-turn');
+            } else {
+                document.getElementById('bot-clock-label').classList.add('active-turn');
+                document.getElementById('player-clock-label').classList.remove('active-turn');
+            }
+
             if (game.game_over() && !isReviewMode) {
                 statusText = "Match Complete! Processing calculations...";
                 setTimeout(compileGameSummary, 600);
@@ -743,6 +907,7 @@
         }
 
         function compileGameSummary() {
+            clearInterval(chessClockIntervalId);
             reviewHistoryList = game.history();
             var rawMoves = game.history({ verbose: true });
             var testGame = new Chess();
@@ -789,9 +954,23 @@
                 if (moveObj.color === 'w') { userMoves++; userScoreWeight += moveVal; }
             }
 
+            // Standardize game over window heading context profiles
+            if (isClockTimeoutTermination) {
+                document.getElementById('gameover-title').innerText = `Timeout: ${timeoutWinner} Wins!`;
+            } else if (game.in_checkmate()) {
+                document.getElementById('gameover-title').innerText = "Checkmate Finished Match!";
+            } else {
+                document.getElementById('gameover-title').innerText = "Game Drawn / Terminated";
+            }
+
             var finalAccuracy = userMoves > 0 ? Math.min(100, Math.max(0, Math.round(userScoreWeight / userMoves))) : 100;
             var baseRating = isLocalFriendMode ? 500 : activeBot.elo;
-            var estimatedPerformance = Math.round(baseRating + ((finalAccuracy - 70) * 12));
+            
+            // Adjust reward modifier if game ended on timeout failure
+            var timeoutFactor = 1;
+            if (isClockTimeoutTermination && timeoutWinner === 'Black') timeoutFactor = -0.5;
+
+            var estimatedPerformance = Math.round(baseRating + (((finalAccuracy - 70) * 12) * timeoutFactor));
             if (estimatedPerformance < 100) estimatedPerformance = 100;
 
             document.getElementById('accuracy-val').innerText = finalAccuracy + "%";
@@ -840,7 +1019,7 @@
         }
 
         function makeBotMove() {
-            if (game.game_over() || isLocalFriendMode) { updateStatusAndLog(); return; }
+            if (game.game_over() || isLocalFriendMode || isClockTimeoutTermination) { updateStatusAndLog(); return; }
             var moves = game.moves();
 
             if (Math.random() < activeBot.blunderChance) {
@@ -850,6 +1029,7 @@
                         var m = game.move(moves[i]);
                         board.position(game.fen());
                         playSound(m && m.captured);
+                        triggerRealtimeEvaluationUpdate();
                         updateStatusAndLog();
                         return;
                     }
@@ -871,17 +1051,19 @@
             var details = game.move(bestMove || moves[0]);
             board.position(game.fen());
             playSound(details && details.captured);
+            triggerRealtimeEvaluationUpdate();
             updateStatusAndLog();
         }
 
         function onDrop(source, target, piece) {
-            if (isReviewMode) return 'snapback';
+            if (isReviewMode || isClockTimeoutTermination) return 'snapback';
             if (!isLocalFriendMode && (game.turn() !== 'w' || !piece.startsWith('w'))) return 'snapback';
             
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
             playSound(move.captured || move.flags.includes('e'));
+            triggerRealtimeEvaluationUpdate();
             updateStatusAndLog();
 
             window.setTimeout(() => {
@@ -891,14 +1073,35 @@
         }
 
         function resetGame() {
+            clearInterval(chessClockIntervalId);
             isReviewMode = false;
+            isClockTimeoutTermination = false;
+            timeoutWinner = null;
+
+            // Restructure active countdown tracking metrics
+            playerTimeRemaining = selectedDurationSeconds;
+            botTimeRemaining = selectedDurationSeconds;
+
+            document.getElementById('player-clock-label').innerText = stringifyClockTime(playerTimeRemaining);
+            document.getElementById('bot-clock-label').innerText = stringifyClockTime(botTimeRemaining);
+
             reviewHistoryList = []; reviewClassifications = []; reviewReasonings = []; reviewEvaluations = [];
             reviewCurrentIndex = -1;
+            
             document.getElementById('review-controls').style.display = 'none';
             document.getElementById('gameover-modal').style.display = 'none';
+            
+            // Re-center engine indicators
+            document.getElementById('eval-gauge-black').style.height = "50%";
+            document.getElementById('eval-txt-white').innerText = "+0.0";
+            document.getElementById('eval-txt-black').innerText = "";
+
             game.reset();
             board.start();
             updateStatusAndLog();
+
+            // Fire running loop thread
+            chessClockIntervalId = setInterval(runClockTickEngine, 1000);
         }
 
         window.onload = function() {
