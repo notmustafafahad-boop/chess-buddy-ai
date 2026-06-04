@@ -494,7 +494,7 @@
         var selectedTimerConfig = "Untimed";
         var timerDurationSeconds = 0;
         
-        // High-Precision Engine States (Stored as Milliseconds)
+        // High-Precision Engine States (Stored as Milliseconds)[cite: 1]
         var whiteMsLeft = 0;
         var blackMsLeft = 0;
         var lastTurnSwitchTimestamp = null;
@@ -544,7 +544,7 @@
             ]
         };
 
-        // Standardized Piece-Square Valuation Tables for Positional AI Depth Matching
+        // Positional Evaluation Matrix Layout Arrays
         const pstPawn = [
             [0,  0,  0,  0,  0,  0,  0,  0], [50, 50, 50, 50, 50, 50, 50, 50],
             [10, 10, 20, 30, 30, 20, 10, 10], [ 5,  5, 10, 25, 25, 10,  5,  5],
@@ -696,6 +696,7 @@
             return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
         }
 
+        // --- FIXED CORE TIMER SYSTEM ---
         function updateClockVisualDisplays() {
             document.getElementById('clock-white').innerText = formatTimeDigits(whiteMsLeft);
             document.getElementById('clock-black').innerText = formatTimeDigits(blackMsLeft);
@@ -711,20 +712,8 @@
 
         function switchClockTurns() {
             if (timerDurationSeconds === 0) return;
-            
-            var now = Date.now();
-            if (lastTurnSwitchTimestamp !== null) {
-                var elapsedMs = now - lastTurnSwitchTimestamp;
-                
-                if (game.turn() === 'b') { 
-                    whiteMsLeft -= elapsedMs;
-                    if (whiteMsLeft <= 0) { whiteMsLeft = 0; flagOutEndGame('Black'); }
-                } else {
-                    blackMsLeft -= elapsedMs;
-                    if (blackMsLeft <= 0) { blackMsLeft = 0; flagOutEndGame('White'); }
-                }
-            }
-            lastTurnSwitchTimestamp = now;
+            // The single background loop decrements everything smoothly, we just refresh the reference frame
+            lastTurnSwitchTimestamp = Date.now();
             updateClockVisualDisplays();
         }
 
@@ -747,11 +736,11 @@
                 lastTurnSwitchTimestamp = now;
 
                 if (game.turn() === 'w') {
-                    whiteMsLeft -= elapsedMs;
-                    if (whiteMsLeft <= 0) { whiteMsLeft = 0; clearInterval(clockIntervalTracker); flagOutEndGame('Black'); }
+                    whiteMsLeft = Math.max(0, whiteMsLeft - elapsedMs);
+                    if (whiteMsLeft === 0) { clearInterval(clockIntervalTracker); flagOutEndGame('Black'); }
                 } else {
-                    blackMsLeft -= elapsedMs;
-                    if (blackMsLeft <= 0) { blackMsLeft = 0; clearInterval(clockIntervalTracker); flagOutEndGame('White'); }
+                    blackMsLeft = Math.max(0, blackMsLeft - elapsedMs);
+                    if (blackMsLeft === 0) { clearInterval(clockIntervalTracker); flagOutEndGame('White'); }
                 }
                 updateClockVisualDisplays();
             }, 100);
@@ -764,7 +753,6 @@
             compileGameSummary();
         }
 
-        // Expanded Evaluation: Material Value + Positional Layout Bonuses
         function evaluateBoard(boardState) {
             var score = 0;
             const values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
@@ -774,15 +762,12 @@
                     var piece = boardState[r][c];
                     if (piece) {
                         var val = values[piece.type];
-                        
-                        // Add positional tables tracking to give bots human-like directional tendencies
                         if (piece.type === 'p') val += (piece.color === 'w' ? pstPawn[r][c] : pstPawn[7-r][c]);
                         if (piece.type === 'n') val += (piece.color === 'w' ? pstKnight[r][c] : pstKnight[7-r][c]);
                         if (piece.type === 'b') val += (piece.color === 'w' ? pstBishop[r][c] : pstBishop[7-r][c]);
                         if (piece.type === 'r') val += (piece.color === 'w' ? pstRook[r][c] : pstRook[7-r][c]);
                         if (piece.type === 'q') val += (piece.color === 'w' ? pstQueen[r][c] : pstQueen[7-r][c]);
                         if (piece.type === 'k') val += (piece.color === 'w' ? pstKing[r][c] : pstKing[7-r][c]);
-
                         score += (piece.color === 'w' ? val : -val);
                     }
                 }
@@ -829,13 +814,12 @@
             quitActiveMatch();
         }
 
-        // --- ADAPTIVE AI LOGIC (MINIMAX ENGINE WITH ALPHA-BETA PRUNING) ---
-        
+        // --- STRENGTH ENGINE AND STRATEGIC TREE BRANCHES ---
         function getBotSearchDepth(elo) {
             if (elo < 800) return 1;
             if (elo < 1500) return 2;
             if (elo < 2200) return 3;
-            return 4; // Higher search depths require background workers, depth 4 provides immediate performance stability
+            return 4;
         }
 
         function minimax(depth, isMaximizing, alpha, beta) {
@@ -879,11 +863,9 @@
             var currentBotElo = activeBot ? activeBot.elo : 500;
             var currentBlunderChance = activeBot ? activeBot.blunderChance : 0.25;
 
-            // Simulating authentic low-tier mistakes through targeted random blundering
             if (Math.random() < currentBlunderChance) {
                 selectedMove = moves[Math.floor(Math.random() * moves.length)];
             } else {
-                // Perform Alpha-Beta Minimax Selection
                 var depth = getBotSearchDepth(currentBotElo);
                 var bestValue = game.turn() === 'w' ? -Infinity : Infinity;
                 var moveCandidates = [];
@@ -909,14 +891,13 @@
                         }
                     }
                 }
-                // Pick a variation among equal alternatives to create gameplay diversity
                 selectedMove = moveCandidates[Math.floor(Math.random() * moveCandidates.length)];
             }
 
             if (selectedMove) {
                 game.move(selectedMove);
                 board.position(game.fen());
-                switchClockTurns();
+                switchClockTurns(); 
                 updateStatusAndLog();
             }
         }
