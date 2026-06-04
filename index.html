@@ -544,6 +544,44 @@
             ]
         };
 
+        // Standardized Piece-Square Valuation Tables for Positional AI Depth Matching
+        const pstPawn = [
+            [0,  0,  0,  0,  0,  0,  0,  0], [50, 50, 50, 50, 50, 50, 50, 50],
+            [10, 10, 20, 30, 30, 20, 10, 10], [ 5,  5, 10, 25, 25, 10,  5,  5],
+            [ 0,  0,  0, 20, 20,  0,  0,  0], [ 5, -5,-10,  0,  0,-10, -5,  5],
+            [ 5, 10, 10,-20,-20, 10, 10,  5], [0,  0,  0,  0,  0,  0,  0,  0]
+        ];
+        const pstKnight = [
+            [-50,-40,-30,-30,-30,-30,-40,-50], [-40,-20,  0,  0,  0,  0,-20,-40],
+            [-30,  0, 10, 15, 15, 10,  0,-30], [-30,  5, 15, 20, 20, 15,  5,-30],
+            [-30,  0, 15, 20, 20, 15,  0,-30], [-30,  5, 10, 15, 15, 10,  5,-30],
+            [-40,-20,  0,  5,  5,  0,-20,-40], [-50,-40,-30,-30,-30,-30,-40,-50]
+        ];
+        const pstBishop = [
+            [-20,-10,-10,-10,-10,-10,-10,-20], [-10,  0,  0,  0,  0,  0,  0,-10],
+            [-10,  0,  5, 10, 10,  5,  0,-10], [-10,  5,  5, 10, 10,  5,  5,-10],
+            [-10,  0, 10, 10, 10, 10,  0,-10], [-10, 10, 10, 10, 10, 10, 10,-10],
+            [-10,  5,  0,  0,  0,  0,  5,-10], [-20,-10,-10,-10,-10,-10,-10,-20]
+        ];
+        const pstRook = [
+            [0,  0,  0,  0,  0,  0,  0,  0], [5, 10, 10, 10, 10, 10, 10,  5],
+            [-5,  0,  0,  0,  0,  0,  0, -5], [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5], [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5], [0,  0,  0,  5,  5,  0,  0,  0]
+        ];
+        const pstQueen = [
+            [-20,-10,-10, -5, -5,-10,-10,-20], [-10,  0,  0,  0,  0,  0,  0,-10],
+            [-10,  0,  5,  5,  5,  5,  0,-10], [ -5,  0,  5,  5,  5,  5,  0, -5],
+            [  0,  0,  5,  5,  5,  5,  0,  0], [-10,  5,  5,  5,  5,  5,  0,-10],
+            [-10,  0,  5,  0,  0,  0,  0,-10], [-20,-10,-10, -5, -5,-10,-10,-20]
+        ];
+        const pstKing = [
+            [-30,-40,-40,-50,-50,-40,-40,-30], [-30,-40,-40,-50,-50,-40,-40,-30],
+            [-30,-40,-40,-50,-50,-40,-40,-30], [-30,-40,-40,-50,-50,-40,-40,-30],
+            [-20,-30,-30,-40,-40,-30,-30,-20], [-10,-20,-20,-20,-20,-20,-20,-10],
+            [ 20, 20,  0,  0,  0,  0, 20, 20], [ 20, 30, 10,  0,  0, 10, 30, 20]
+        ];
+
         function handleGoogleCredentialResponse(response) {
             const base64Url = response.credential.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -671,7 +709,6 @@
             }
         }
 
-        // Millisecond precision delta tracking function
         function switchClockTurns() {
             if (timerDurationSeconds === 0) return;
             
@@ -679,13 +716,10 @@
             if (lastTurnSwitchTimestamp !== null) {
                 var elapsedMs = now - lastTurnSwitchTimestamp;
                 
-                // Deduct from whoever JUST completed their turn
                 if (game.turn() === 'b') { 
-                    // It is now Black's turn, which means White just moved! Deduct from White.
                     whiteMsLeft -= elapsedMs;
                     if (whiteMsLeft <= 0) { whiteMsLeft = 0; flagOutEndGame('Black'); }
                 } else {
-                    // It is now White's turn, which means Black just moved! Deduct from Black.
                     blackMsLeft -= elapsedMs;
                     if (blackMsLeft <= 0) { blackMsLeft = 0; flagOutEndGame('White'); }
                 }
@@ -705,7 +739,6 @@
             lastTurnSwitchTimestamp = Date.now();
             updateClockVisualDisplays();
             
-            // Background polling loop triggers 10 times a second to keep visual updates highly responsive
             clockIntervalTracker = setInterval(function() {
                 if (game.game_over()) { clearInterval(clockIntervalTracker); return; }
                 
@@ -731,18 +764,30 @@
             compileGameSummary();
         }
 
+        // Expanded Evaluation: Material Value + Positional Layout Bonuses
         function evaluateBoard(boardState) {
             var score = 0;
-            for (var i=0; i<8; i++) {
-                for (var j=0; j<8; j++) {
-                    var piece = boardState[i][j];
+            const values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+
+            for (var r = 0; r < 8; r++) {
+                for (var c = 0; c < 8; c++) {
+                    var piece = boardState[r][c];
                     if (piece) {
-                        var values = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 200 };
-                        score += (piece.color === 'w' ? values[piece.type] : -values[piece.type]);
+                        var val = values[piece.type];
+                        
+                        // Add positional tables tracking to give bots human-like directional tendencies
+                        if (piece.type === 'p') val += (piece.color === 'w' ? pstPawn[r][c] : pstPawn[7-r][c]);
+                        if (piece.type === 'n') val += (piece.color === 'w' ? pstKnight[r][c] : pstKnight[7-r][c]);
+                        if (piece.type === 'b') val += (piece.color === 'w' ? pstBishop[r][c] : pstBishop[7-r][c]);
+                        if (piece.type === 'r') val += (piece.color === 'w' ? pstRook[r][c] : pstRook[7-r][c]);
+                        if (piece.type === 'q') val += (piece.color === 'w' ? pstQueen[r][c] : pstQueen[7-r][c]);
+                        if (piece.type === 'k') val += (piece.color === 'w' ? pstKing[r][c] : pstKing[7-r][c]);
+
+                        score += (piece.color === 'w' ? val : -val);
                     }
                 }
             }
-            return score;
+            return score / 100.0;
         }
 
         function updateWinLossPredictionBar() {
@@ -784,14 +829,96 @@
             quitActiveMatch();
         }
 
+        // --- ADAPTIVE AI LOGIC (MINIMAX ENGINE WITH ALPHA-BETA PRUNING) ---
+        
+        function getBotSearchDepth(elo) {
+            if (elo < 800) return 1;
+            if (elo < 1500) return 2;
+            if (elo < 2200) return 3;
+            return 4; // Higher search depths require background workers, depth 4 provides immediate performance stability
+        }
+
+        function minimax(depth, isMaximizing, alpha, beta) {
+            if (depth === 0 || game.game_over()) {
+                return evaluateBoard(game.board());
+            }
+
+            var moves = game.moves();
+            if (isMaximizing) {
+                var maxEval = -Infinity;
+                for (var i = 0; i < moves.length; i++) {
+                    game.move(moves[i]);
+                    var ev = minimax(depth - 1, false, alpha, beta);
+                    game.undo();
+                    maxEval = Math.max(maxEval, ev);
+                    alpha = Math.max(alpha, ev);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                var minEval = Infinity;
+                for (var i = 0; i < moves.length; i++) {
+                    game.move(moves[i]);
+                    var ev = minimax(depth - 1, true, alpha, beta);
+                    game.undo();
+                    minEval = Math.min(minEval, ev);
+                    beta = Math.min(beta, ev);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
         function makeBotMove() {
             if (game.game_over()) return;
+
             var moves = game.moves();
-            game.move(moves[Math.floor(Math.random() * moves.length)]);
-            board.position(game.fen());
-            
-            switchClockTurns(); // Handle timestamp adjustment immediately when bot drops its piece
-            updateStatusAndLog();
+            if (moves.length === 0) return;
+
+            var selectedMove = null;
+            var currentBotElo = activeBot ? activeBot.elo : 500;
+            var currentBlunderChance = activeBot ? activeBot.blunderChance : 0.25;
+
+            // Simulating authentic low-tier mistakes through targeted random blundering
+            if (Math.random() < currentBlunderChance) {
+                selectedMove = moves[Math.floor(Math.random() * moves.length)];
+            } else {
+                // Perform Alpha-Beta Minimax Selection
+                var depth = getBotSearchDepth(currentBotElo);
+                var bestValue = game.turn() === 'w' ? -Infinity : Infinity;
+                var moveCandidates = [];
+
+                for (var i = 0; i < moves.length; i++) {
+                    game.move(moves[i]);
+                    var boardValue = minimax(depth - 1, game.turn() === 'w', -Infinity, Infinity);
+                    game.undo();
+
+                    if (game.turn() === 'w') {
+                        if (boardValue > bestValue) {
+                            bestValue = boardValue;
+                            moveCandidates = [moves[i]];
+                        } else if (boardValue === bestValue) {
+                            moveCandidates.push(moves[i]);
+                        }
+                    } else {
+                        if (boardValue < bestValue) {
+                            bestValue = boardValue;
+                            moveCandidates = [moves[i]];
+                        } else if (boardValue === bestValue) {
+                            moveCandidates.push(moves[i]);
+                        }
+                    }
+                }
+                // Pick a variation among equal alternatives to create gameplay diversity
+                selectedMove = moveCandidates[Math.floor(Math.random() * moveCandidates.length)];
+            }
+
+            if (selectedMove) {
+                game.move(selectedMove);
+                board.position(game.fen());
+                switchClockTurns();
+                updateStatusAndLog();
+            }
         }
 
         function removeGreyCircles() { $('#my-board .square-55d63').removeClass('legal-move-marker'); }
@@ -811,7 +938,7 @@
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
-            switchClockTurns(); // Calculate precise elapsed milliseconds immediately
+            switchClockTurns();
             updateStatusAndLog();
             
             if (!isLocalFriendMode) { 
