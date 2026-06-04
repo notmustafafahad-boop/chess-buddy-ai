@@ -506,8 +506,10 @@
             avatar: "🦊"
         };
 
+        // Material values
         const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
 
+        // Positional Weighting Arrays
         const POSITION_WEIGHTS = {
             p: [
                 [0,  0,  0,  0,  0,  0,  0,  0],
@@ -573,23 +575,23 @@
 
         const botDatabase = {
             beginner: [
-                { id: "b1", name: "Toddler Timmy", elo: 250, avatar: "👶", desc: "Plays instantly, gets distracted easily.", searchDepth: 1, blunderChance: 0.70, positionalWeight: 0.1 },
-                { id: "b2", name: "Whiskers Kitty", elo: 380, avatar: "🐱", desc: "Likes swatting at pieces randomly.", searchDepth: 1, blunderChance: 0.55, positionalWeight: 0.2 },
-                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned how the pieces move yesterday.", searchDepth: 1, blunderChance: 0.40, positionalWeight: 0.3 },
-                { id: "b4", name: "Checkmate Chuck", elo: 620, avatar: "👦", desc: "Tries to look for scholar's mate every game.", searchDepth: 2, blunderChance: 0.30, positionalWeight: 0.4 },
-                { id: "b5", name: "Coffeehouse Cody", elo: 750, avatar: "☕", desc: "Plays rapid random attacks without thinking.", searchDepth: 2, blunderChance: 0.22, positionalWeight: 0.5 }
+                { id: "b1", name: "Toddler Timmy", elo: 250, avatar: "👶", desc: "Plays instantly, gets distracted easily.", searchDepth: 1, blunderChance: 0.65, positionalWeight: 0.1 },
+                { id: "b2", name: "Whiskers Kitty", elo: 380, avatar: "🐱", desc: "Likes swatting at pieces randomly.", searchDepth: 1, blunderChance: 0.50, positionalWeight: 0.2 },
+                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned how the pieces move yesterday.", searchDepth: 1, blunderChance: 0.35, positionalWeight: 0.3 },
+                { id: "b4", name: "Checkmate Chuck", elo: 620, avatar: "👦", desc: "Tries to look for scholar's mate every game.", searchDepth: 2, blunderChance: 0.25, positionalWeight: 0.4 },
+                { id: "b5", name: "Coffeehouse Cody", elo: 750, avatar: "☕", desc: "Plays rapid random attacks without thinking.", searchDepth: 2, blunderChance: 0.18, positionalWeight: 0.5 }
             ],
             intermediate: [
-                { id: "i1", name: "Casual Carl", elo: 850, avatar: "🧠", desc: "Plays balanced, basic standard club chess.", searchDepth: 2, blunderChance: 0.15, positionalWeight: 0.7 },
-                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent tactical vision, occasionally blunders.", searchDepth: 2, blunderChance: 0.10, positionalWeight: 0.8 },
+                { id: "i1", name: "Casual Carl", elo: 850, avatar: "🧠", desc: "Plays balanced, basic standard club chess.", searchDepth: 2, blunderChance: 0.12, positionalWeight: 0.7 },
+                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent tactical vision, occasionally blunders.", searchDepth: 2, blunderChance: 0.09, positionalWeight: 0.8 },
                 { id: "i3", name: "Professor Penny", elo: 1150, avatar: "👓", desc: "Very safe developer but misses deep forks.", searchDepth: 3, blunderChance: 0.07, positionalWeight: 0.9 },
                 { id: "i4", name: "Tactical Toby", elo: 1300, avatar: "🏹", desc: "Enjoys sacrificing minor pieces for space.", searchDepth: 3, blunderChance: 0.05, positionalWeight: 1.0 },
                 { id: "i5", name: "Solid Sophia", elo: 1450, avatar: "🛡️", desc: "Extremely defensive style, waits for your errors.", searchDepth: 3, blunderChance: 0.03, positionalWeight: 1.1 }
             ],
             expert: [
-                { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting advanced minor pieces.", searchDepth: 3, blunderChance: 0.01, positionalWeight: 1.2 },
-                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for highly aesthetic mating webs.", searchDepth: 3, blunderChance: 0.00, positionalWeight: 1.3 },
-                { id: "e3", name: "Positional Piper", elo: 1900, avatar: "🪈", desc: "Master of squeezing your pawn structures out.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.4 },
+                { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting advanced minor pieces.", searchDepth: 3, blunderChance: 0.02, positionalWeight: 1.2 },
+                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for highly aesthetic mating webs.", searchDepth: 3, blunderChance: 0.01, positionalWeight: 1.3 },
+                { id: "e3", name: "Positional Piper", elo: 1900, avatar: "🪈", desc: "Master of squeezing your pawn structures out.", searchDepth: 4, blunderChance: 0.01, positionalWeight: 1.4 },
                 { id: "e4", name: "Endgame Ethan", elo: 2050, avatar: "⏳", desc: "Swaps off heavy items to win simple endgames.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.5 },
                 { id: "e5", name: "Calculated Chloe", elo: 2150, avatar: "📊", desc: "Deep brute-force checker of structural lines.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.6 }
             ],
@@ -601,11 +603,11 @@
                 { id: "g5", name: "Grandmaster Garry", elo: 2750, avatar: "🎖️", desc: "Legendary opening prep specialist.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.1 }
             ],
             supergm: [
-                { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.2 },
-                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.4 },
-                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.5 },
-                { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot logically conceptualize.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.7 },
-                { id: "s5", name: "Chess Buddy Overlord", elo: 3450, avatar: "👽", desc: "Flawless mathematical perfection.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 3.0 }
+                { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.3 },
+                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.5 },
+                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.6 },
+                { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot logically conceptualize.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.8 },
+                { id: "s5", name: "Chess Buddy Overlord", elo: 3450, avatar: "👽", desc: "Flawless mathematical perfection.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 3.2 }
             ]
         };
 
@@ -711,6 +713,7 @@
         }
 
         function quitActiveMatch() {
+            isBotThinking = false;
             clearInterval(clockIntervalTracker);
             switchScreen('home-screen');
         }
@@ -807,7 +810,7 @@
             var statusText = game.game_over() ? "Match Complete!" : (game.turn() === 'w' ? "White to move" : "Black to move");
             
             if (isBotThinking && !game.game_over()) {
-                statusText = `${activeBot.name} is thinking...`;
+                statusText = `⚙️ ${activeBot.name} is calculating lines...`;
             }
             
             document.getElementById('status').innerHTML = statusText;
@@ -836,6 +839,7 @@
             quitActiveMatch();
         }
 
+        // Optimized Alpha-Beta Minimax Engine with Move Ordering
         function minimaxSearch(depth, isMaximizing, alpha, beta, posFactor) {
             if (depth === 0 || game.game_over()) {
                 return evaluateBoard(game.board(), posFactor);
@@ -843,8 +847,7 @@
 
             var moves = game.moves();
             
-            // Optimization: Move Ordering. 
-            // Checking captures and checks first allows Alpha-Beta to prune branches MUCH faster.
+            // Move Ordering Optimization: Evaluates critical threats and captures first to maximize alpha-beta pruning speed
             moves.sort(function(a, b) {
                 if (b.indexOf('#') !== -1) return 1;
                 if (b.indexOf('+') !== -1) return 1;
@@ -877,14 +880,14 @@
             }
         }
 
-        // ASYNC BOT BRAIN: Prevents UI from freezing during deep calculations
+        // Non-blocking Asynchronous Move Batcher - Resolves the "Page Unresponsive" issue
         function asyncComputeBotMove(callback) {
             if (game.game_over()) return;
 
             var legalMoves = game.moves();
             if (legalMoves.length === 0) return;
 
-            // Handle Blunders for easier bots
+            // Simulated Blunder Layer for Lower-tier Bots
             if (Math.random() < activeBot.blunderChance) {
                 var poorMoves = [];
                 for (var i = 0; i < legalMoves.length; i++) {
@@ -904,9 +907,11 @@
             var beta = Infinity;
             var index = 0;
 
-            // Process moves in chunks using setTimeout(0) to keep the browser alive
-            function processNextMove() {
-                if (index >= legalMoves.length || !isBotThinking) {
+            // Break up calculation iteration using event loop scheduling 
+            function processNextMoveChunk() {
+                if (!isBotThinking || game.game_over()) return;
+
+                if (index >= legalMoves.length) {
                     callback(optimalMove || legalMoves[0]);
                     return;
                 }
@@ -925,27 +930,24 @@
                 }
 
                 index++;
-                // Smallest possible delay allows the clock to tick and UI to render between move checks
-                setTimeout(processNextMove, 0); 
+                // yields thread back to native layout engines briefly
+                setTimeout(processNextMoveChunk, 1); 
             }
 
-            processNextMove();
+            processNextMoveChunk();
         }
 
         function makeBotMove() {
-            if (game.game_over()) {
-                isBotThinking = false;
-                return;
-            }
+            if (game.game_over() || !isBotThinking) return;
             
             asyncComputeBotMove(function(chosenMove) {
-                if (chosenMove) {
+                if (chosenMove && isBotThinking) {
                     game.move(chosenMove);
                     board.position(game.fen());
                 }
                 
                 isBotThinking = false;
-                lastTurnSwitchTimestamp = Date.now(); // Reset timestamp so bot thinking time isn't penalized to human
+                lastTurnSwitchTimestamp = Date.now(); 
                 updateClockVisualDisplays();
                 updateStatusAndLog();
             });
@@ -977,8 +979,8 @@
             if (!isLocalFriendMode && !game.game_over()) { 
                 isBotThinking = true;
                 updateStatusAndLog();
-                // Add a small artificial delay so the bot doesn't move instantly
-                window.setTimeout(makeBotMove, 600); 
+                // Brief strategic delay prior to calculations beginning
+                window.setTimeout(makeBotMove, 400); 
             }
         }
 
