@@ -6,7 +6,6 @@
     <title>Chess Buddy AI - Premium Interactive Grid</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <style>
         :root {
@@ -65,7 +64,6 @@
             border-radius: 30px;
         }
         .user-avatar { font-size: 20px; border-radius: 50%; overflow: hidden; width: 24px; height: 24px; display: inline-block; background: #444; text-align: center; line-height: 24px; }
-        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .user-meta { text-align: left; }
         .user-name { font-size: 13px; font-weight: bold; color: var(--text-main); }
         .user-stat { font-size: 11px; color: var(--chess-green); font-weight: bold; }
@@ -272,7 +270,7 @@
         .eval-fill-white { width: 50%; background: #fff; transition: width 0.3s ease; }
         .eval-fill-black { flex-grow: 1; background: #444; }
 
-        #move-history { padding: 12px; overflow-y: auto; flex-grow: 1; font-family: monospace; font-size: 13px; color: #d4d4d4; }
+        #move-history { padding: 12px; overflow-y: auto; flex-grow: 1; font-family: monospace; font-size: 13px; color: #d4d4d4; background: #1a1a1a; }
         .move-row { display: grid; grid-template-columns: 45px 145px 145px; padding: 8px 0; border-bottom: 1px solid #252525; text-align: left; }
         .move-number { color: #757575; }
 
@@ -297,13 +295,6 @@
             color: white; border-radius: 4px; box-sizing: border-box; outline: none;
         }
         .auth-input:focus { border-color: var(--chess-green); }
-
-        .google-btn-wrapper {
-            display: flex;
-            justify-content: center;
-            margin: 15px 0;
-            width: 100%;
-        }
 
         .divider { margin: 18px 0; color: #666; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #333; }
@@ -442,12 +433,7 @@
             <h2 id="auth-title" style="margin-top:0; color:var(--chess-green);">Welcome back</h2>
             <p id="auth-subtitle" style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Synchronize profiles & performance history.</p>
             
-            <div class="google-btn-wrapper">
-                <div id="google-signin-button"></div>
-            </div>
-            
-            <div class="divider">or use credentials</div>
-            <input type="text" id="auth-username" class="auth-input" placeholder="Username" value="notmustafa.fahad">
+            <input type="text" id="auth-username" class="auth-input" placeholder="Username" value="guest_grandmaster">
             <input type="password" id="auth-password" class="auth-input" placeholder="Security Password" value="password123">
             <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" onclick="handleNativeAuthSubmission()">Authenticate</button>
         </div>
@@ -476,7 +462,7 @@
                 <div class="stat-box"><div class="stat-val" id="elo-val" style="color:#e67e22;">Unchanged</div><div class="stat-lbl">Performance ELO</div></div>
             </div>
             <div class="modal-actions">
-                <button class="modal-btn" style="background:#333; color:#aaa;" onclick="closeModalAndExit()">Back to Lobby</button>
+                <button class="modal-btn" style="background:var(--chess-green); color:#fff;" onclick="closeModalAndExit()">Back to Lobby</button>
             </div>
         </div>
     </div>
@@ -495,22 +481,19 @@
         var timerDurationSeconds = 0;
         var isBotThinking = false;
         
-        // High-Precision Engine States (Stored as Milliseconds)
         var whiteMsLeft = 0;
         var blackMsLeft = 0;
         var lastTurnSwitchTimestamp = null;
         var clockIntervalTracker = null;
 
         var currentUserSession = {
-            username: "notmustafa.fahad",
+            username: "guest_grandmaster",
             displayElo: 500,
             avatar: "🦊"
         };
 
-        // Material values used for evaluation calculation
         const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
 
-        // Positional Weight Matrices
         const POSITION_WEIGHTS = {
             p: [
                 [0,  0,  0,  0,  0,  0,  0,  0],
@@ -612,30 +595,6 @@
             ]
         };
 
-        function handleGoogleCredentialResponse(response) {
-            const base64Url = response.credential.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            const googleUserData = JSON.parse(jsonPayload);
-            executeNativeLogin(googleUserData.name, `<img src="${googleUserData.picture}">`);
-        }
-
-        function initGoogleIdentityAuth() {
-            if (typeof google !== 'undefined') {
-                google.accounts.id.initialize({
-                    client_id: "342294129862-bu1j9f349uip99to9f0t5pfiliuki1f4.apps.googleusercontent.com", 
-                    callback: handleGoogleCredentialResponse
-                });
-                google.accounts.id.renderButton(
-                    document.getElementById("google-signin-button"),
-                    { theme: "outline", size: "large", width: "320" }
-                );
-            }
-        }
-
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
             document.getElementById(screenId).classList.add('active');
@@ -648,7 +607,6 @@
         function openAuthModal(mode) { 
             document.getElementById('auth-title').innerText = mode === 'login' ? "Welcome back" : "Make an account";
             document.getElementById('auth-modal').style.display = 'flex';
-            initGoogleIdentityAuth(); 
         }
         
         function closeAuthModal(e) { document.getElementById('auth-modal').style.display = 'none'; }
@@ -807,7 +765,6 @@
                 `Winning Prediction: ${rawScore > 0 ? 'White' : 'Black'} Advantage` : "Winning Prediction: Even Match";
         }
 
-        // FIXED: Re-built log parser so history layout displays dynamically on every turn
         function updateStatusAndLog() {
             updateWinLossPredictionBar();
             var statusText = game.game_over() ? "Match Complete!" : (game.turn() === 'w' ? "White to move" : "Black to move");
@@ -818,6 +775,7 @@
             
             document.getElementById('status').innerHTML = statusText;
 
+            // REBUILT MOVELOG PARSER: Forces update directly bypassing asset-load pipelines
             var history = game.history();
             var html = "";
             for (var i = 0; i < history.length; i += 2) {
@@ -832,10 +790,10 @@
             var scrollContainer = document.getElementById('move-history');
             scrollContainer.scrollTop = scrollContainer.scrollHeight;
 
-            // FIXED: Endgame trigger catches immediately on game over check to show popup summary card
+            // IMMEDIATE GAME OVER POPUP HOOK
             if (game.game_over()) {
                 clearInterval(clockIntervalTracker);
-                window.setTimeout(compileGameSummary, 600);
+                compileGameSummary();
             }
         }
 
@@ -853,7 +811,6 @@
             quitActiveMatch();
         }
 
-        // Alpha-Beta Minimax Engine Logic
         function minimaxSearch(depth, isMaximizing, alpha, beta, posFactor) {
             if (depth === 0 || game.game_over()) {
                 return evaluateBoard(game.board(), posFactor);
@@ -892,7 +849,6 @@
             }
         }
 
-        // Asynchronous Move Batcher
         function asyncComputeBotMove(callback) {
             if (game.game_over()) return;
 
