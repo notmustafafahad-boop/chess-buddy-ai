@@ -495,6 +495,7 @@
         var timerDurationSeconds = 0;
         var isBotThinking = false;
         
+        // High-Precision Engine States (Stored as Milliseconds)
         var whiteMsLeft = 0;
         var blackMsLeft = 0;
         var lastTurnSwitchTimestamp = null;
@@ -506,10 +507,10 @@
             avatar: "🦊"
         };
 
-        // Material values
+        // Material values used for evaluation calculation
         const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
 
-        // Positional Weighting Arrays
+        // Positional Weight Matrices
         const POSITION_WEIGHTS = {
             p: [
                 [0,  0,  0,  0,  0,  0,  0,  0],
@@ -637,6 +638,7 @@
 
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            document.getElementById(screenId).classList.add('active');
             document.getElementById(screenId).style.display = 'flex';
             if (screenId === 'game-screen' && board) {
                 window.setTimeout(function() { board.resize(); }, 100);
@@ -805,6 +807,7 @@
                 `Winning Prediction: ${rawScore > 0 ? 'White' : 'Black'} Advantage` : "Winning Prediction: Even Match";
         }
 
+        // FIXED: Re-built log parser so history layout displays dynamically on every turn
         function updateStatusAndLog() {
             updateWinLossPredictionBar();
             var statusText = game.game_over() ? "Match Complete!" : (game.turn() === 'w' ? "White to move" : "Black to move");
@@ -815,22 +818,33 @@
             
             document.getElementById('status').innerHTML = statusText;
 
-            if (game.game_over()) {
-                clearInterval(clockIntervalTracker);
-                setTimeout(compileGameSummary, 600);
-            }
-
             var history = game.history();
             var html = "";
-            for (var i=0; i<history.length; i+=2) {
-                html += `<div class="move-row"><span class="move-number">${Math.floor(i/2)+1}.</span><span>${history[i]}</span><span>${history[i+1]||""}</span></div>`;
+            for (var i = 0; i < history.length; i += 2) {
+                html += `<div class="move-row">` +
+                        `<span class="move-number">${Math.floor(i / 2) + 1}.</span>` +
+                        `<span>${history[i]}</span>` +
+                        `<span>${history[i + 1] || ""}</span>` +
+                        `</div>`;
             }
             document.getElementById('move-history').innerHTML = html;
+            
+            var scrollContainer = document.getElementById('move-history');
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+
+            // FIXED: Endgame trigger catches immediately on game over check to show popup summary card
+            if (game.game_over()) {
+                clearInterval(clockIntervalTracker);
+                window.setTimeout(compileGameSummary, 600);
+            }
         }
 
         function compileGameSummary() {
-            document.getElementById('accuracy-val').innerText = "84%";
-            document.getElementById('elo-val').innerText = "Unchanged";
+            var baseScore = Math.abs(evaluateBoard(game.board(), 1.0) / 100.0);
+            var calculatedAccuracy = Math.max(50, Math.min(99, Math.round(95 - (baseScore * 3))));
+            
+            document.getElementById('accuracy-val').innerText = calculatedAccuracy + "%";
+            document.getElementById('elo-val').innerText = isLocalFriendMode ? "Unrated" : "Unchanged";
             document.getElementById('gameover-modal').style.display = 'flex';
         }
 
@@ -839,15 +853,13 @@
             quitActiveMatch();
         }
 
-        // Optimized Alpha-Beta Minimax Engine with Move Ordering
+        // Alpha-Beta Minimax Engine Logic
         function minimaxSearch(depth, isMaximizing, alpha, beta, posFactor) {
             if (depth === 0 || game.game_over()) {
                 return evaluateBoard(game.board(), posFactor);
             }
 
             var moves = game.moves();
-            
-            // Move Ordering Optimization: Evaluates critical threats and captures first to maximize alpha-beta pruning speed
             moves.sort(function(a, b) {
                 if (b.indexOf('#') !== -1) return 1;
                 if (b.indexOf('+') !== -1) return 1;
@@ -880,14 +892,13 @@
             }
         }
 
-        // Non-blocking Asynchronous Move Batcher - Resolves the "Page Unresponsive" issue
+        // Asynchronous Move Batcher
         function asyncComputeBotMove(callback) {
             if (game.game_over()) return;
 
             var legalMoves = game.moves();
             if (legalMoves.length === 0) return;
 
-            // Simulated Blunder Layer for Lower-tier Bots
             if (Math.random() < activeBot.blunderChance) {
                 var poorMoves = [];
                 for (var i = 0; i < legalMoves.length; i++) {
@@ -907,7 +918,6 @@
             var beta = Infinity;
             var index = 0;
 
-            // Break up calculation iteration using event loop scheduling 
             function processNextMoveChunk() {
                 if (!isBotThinking || game.game_over()) return;
 
@@ -930,10 +940,8 @@
                 }
 
                 index++;
-                // yields thread back to native layout engines briefly
                 setTimeout(processNextMoveChunk, 1); 
             }
-
             processNextMoveChunk();
         }
 
@@ -945,7 +953,6 @@
                     game.move(chosenMove);
                     board.position(game.fen());
                 }
-                
                 isBotThinking = false;
                 lastTurnSwitchTimestamp = Date.now(); 
                 updateClockVisualDisplays();
@@ -979,7 +986,6 @@
             if (!isLocalFriendMode && !game.game_over()) { 
                 isBotThinking = true;
                 updateStatusAndLog();
-                // Brief strategic delay prior to calculations beginning
                 window.setTimeout(makeBotMove, 400); 
             }
         }
