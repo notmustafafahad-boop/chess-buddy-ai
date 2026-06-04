@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Buddy AI - Premium Interactive Grid</title>
     
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     
     <style>
@@ -64,6 +65,7 @@
             border-radius: 30px;
         }
         .user-avatar { font-size: 20px; border-radius: 50%; overflow: hidden; width: 24px; height: 24px; display: inline-block; background: #444; text-align: center; line-height: 24px; }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .user-meta { text-align: left; }
         .user-name { font-size: 13px; font-weight: bold; color: var(--text-main); }
         .user-stat { font-size: 11px; color: var(--chess-green); font-weight: bold; }
@@ -310,6 +312,8 @@
         #restart-btn { background: #e67e22; border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         #leave-btn, #home-btn { background: #333; color: white; border: 1px solid #444; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 
+        .google-btn-wrapper { display: flex; justify-content: center; margin-bottom: 10px; }
+
         @media (max-width: 860px) {
             .app-layout { flex-direction: column; align-items: center; }
             .sidebar { width: 450px; max-width: 90vw; height: 350px; }
@@ -433,6 +437,17 @@
             <h2 id="auth-title" style="margin-top:0; color:var(--chess-green);">Welcome back</h2>
             <p id="auth-subtitle" style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Synchronize profiles & performance history.</p>
             
+            <div class="google-btn-wrapper">
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+            </div>
+
+            <div class="divider">OR USE EMAIL</div>
+
             <input type="text" id="auth-username" class="auth-input" placeholder="Username" value="guest_grandmaster">
             <input type="password" id="auth-password" class="auth-input" placeholder="Security Password" value="password123">
             <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" onclick="handleNativeAuthSubmission()">Authenticate</button>
@@ -495,105 +510,64 @@
         const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
 
         const POSITION_WEIGHTS = {
-            p: [
-                [0,  0,  0,  0,  0,  0,  0,  0],
-                [50, 50, 50, 50, 50, 50, 50, 50],
-                [10, 10, 20, 30, 30, 20, 10, 10],
-                [5,  5, 10, 25, 25, 10,  5,  5],
-                [0,  0,  0, 20, 20,  0,  0,  0],
-                [5, -5,-10,  0,  0,-10, -5,  5],
-                [5, 10, 10,-20,-20, 10, 10,  5],
-                [0,  0,  0,  0,  0,  0,  0,  0]
-            ],
-            n: [
-                [-50,-40,-30,-30,-30,-30,-40,-50],
-                [-40,-20,  0,  0,  0,  0,-20,-40],
-                [-30,  0, 10, 15, 15, 10,  0,-30],
-                [-30,  5, 15, 20, 20, 15,  5,-30],
-                [-30,  0, 15, 20, 20, 15,  0,-30],
-                [-30,  5, 10, 15, 15, 10,  5,-30],
-                [-40,-20,  0,  5,  5,  0,-20,-40],
-                [-50,-40,-30,-30,-30,-30,-40,-50]
-            ],
-            b: [
-                [-20,-10,-10,-10,-10,-10,-10,-20],
-                [-10,  0,  0,  0,  0,  0,  0,-10],
-                [-10,  0,  5, 10, 10,  5,  0,-10],
-                [-10,  5,  5, 10, 10,  5,  5,-10],
-                [-10,  0, 10, 10, 10, 10,  0,-10],
-                [-10, 10, 10, 10, 10, 10, 10,-10],
-                [-10,  5,  0,  0,  0,  0,  5,-10],
-                [-20,-10,-10,-10,-10,-10,-10,-20]
-            ],
-            r: [
-                [0,  0,  0,  0,  0,  0,  0,  0],
-                [5, 10, 10, 10, 10, 10, 10,  5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [-5,  0,  0,  0,  0,  0,  0, -5],
-                [0,  0,  0,  5,  5,  0,  0,  0]
-            ],
-            q: [
-                [-20,-10,-10, -5, -5,-10,-10,-20],
-                [-10,  0,  0,  0,  0,  0,  0,-10],
-                [-10,  0,  5,  5,  5,  5,  0,-10],
-                [-5,  0,  5,  5,  5,  5,  0, -5],
-                [0,  0,  5,  5,  5,  5,  0, -5],
-                [-10,  5,  5,  5,  5,  5,  0,-10],
-                [-10,  0,  5,  0,  0,  0,  0,-10],
-                [-20,-10,-10, -5, -5,-10,-10,-20]
-            ],
-            k: [
-                [-30,-40,-40,-50,-50,-40,-40,-30],
-                [-30,-40,-40,-50,-50,-40,-40,-30],
-                [-30,-40,-40,-50,-50,-40,-40,-30],
-                [-30,-40,-40,-50,-50,-40,-40,-30],
-                [-20,-30,-30,-40,-40,-30,-30,-20],
-                [-10,-20,-20,-20,-20,-20,-20,-10],
-                [20, 20,  0,  0,  0,  0, 20, 20],
-                [20, 30, 10,  0,  0, 10, 30, 20]
-            ]
+            p: [[0,0,0,0,0,0,0,0],[50,50,50,50,50,50,50,50],[10,10,20,30,30,20,10,10],[5,5,10,25,25,10,5,5],[0,0,0,20,20,0,0,0],[5,-5,-10,0,0,-10,-5,5],[5,10,10,-20,-20,10,10,5],[0,0,0,0,0,0,0,0]],
+            n: [[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,0,0,0,0,-20,-40],[-30,0,10,15,15,10,0,-30],[-30,5,15,20,20,15,5,-30],[-30,0,15,20,20,15,0,-30],[-30,5,10,15,15,10,5,-30],[-40,-20,0,5,5,0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]],
+            b: [[-20,-10,-10,-10,-10,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,10,10,5,0,-10],[-10,5,5,10,10,5,5,-10],[-10,0,10,10,10,10,0,-10],[-10,10,10,10,10,10,10,-10],[-10,5,0,0,0,0,5,-10],[-20,-10,-10,-10,-10,-10,-10,-20]],
+            r: [[0,0,0,0,0,0,0,0],[5,10,10,10,10,10,10,5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[0,0,0,5,5,0,0,0]],
+            q: [[-20,-10,-10,-5,-5,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,5,5,5,0,-10],[-5,0,5,5,5,5,0,-5],[0,0,5,5,5,5,0,-5],[-10,5,5,5,5,5,0,-10],[-10,0,5,0,0,0,0,-10],[-20,-10,-10,-5,-5,-10,-10,-20]],
+            k: [[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20,20,0,0,0,0,20,20],[20,30,10,0,0,10,30,20]]
         };
 
         const botDatabase = {
             beginner: [
                 { id: "b1", name: "Toddler Timmy", elo: 250, avatar: "👶", desc: "Plays instantly, gets distracted easily.", searchDepth: 1, blunderChance: 0.65, positionalWeight: 0.1 },
                 { id: "b2", name: "Whiskers Kitty", elo: 380, avatar: "🐱", desc: "Likes swatting at pieces randomly.", searchDepth: 1, blunderChance: 0.50, positionalWeight: 0.2 },
-                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned how the pieces move yesterday.", searchDepth: 1, blunderChance: 0.35, positionalWeight: 0.3 },
-                { id: "b4", name: "Checkmate Chuck", elo: 620, avatar: "👦", desc: "Tries to look for scholar's mate every game.", searchDepth: 2, blunderChance: 0.25, positionalWeight: 0.4 },
-                { id: "b5", name: "Coffeehouse Cody", elo: 750, avatar: "☕", desc: "Plays rapid random attacks without thinking.", searchDepth: 2, blunderChance: 0.18, positionalWeight: 0.5 }
+                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned pieces move yesterday.", searchDepth: 1, blunderChance: 0.35, positionalWeight: 0.3 },
+                { id: "b4", name: "Checkmate Chuck", elo: 620, avatar: "👦", desc: "Tries to look for scholar's mate.", searchDepth: 2, blunderChance: 0.25, positionalWeight: 0.4 },
+                { id: "b5", name: "Coffeehouse Cody", elo: 750, avatar: "☕", desc: "Plays rapid random attacks.", searchDepth: 2, blunderChance: 0.18, positionalWeight: 0.5 }
             ],
             intermediate: [
-                { id: "i1", name: "Casual Carl", elo: 850, avatar: "🧠", desc: "Plays balanced, basic standard club chess.", searchDepth: 2, blunderChance: 0.12, positionalWeight: 0.7 },
-                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent tactical vision, occasionally blunders.", searchDepth: 2, blunderChance: 0.09, positionalWeight: 0.8 },
-                { id: "i3", name: "Professor Penny", elo: 1150, avatar: "👓", desc: "Very safe developer but misses deep forks.", searchDepth: 3, blunderChance: 0.07, positionalWeight: 0.9 },
-                { id: "i4", name: "Tactical Toby", elo: 1300, avatar: "🏹", desc: "Enjoys sacrificing minor pieces for space.", searchDepth: 3, blunderChance: 0.05, positionalWeight: 1.0 },
-                { id: "i5", name: "Solid Sophia", elo: 1450, avatar: "🛡️", desc: "Extremely defensive style, waits for your errors.", searchDepth: 3, blunderChance: 0.03, positionalWeight: 1.1 }
+                { id: "i1", name: "Casual Carl", elo: 850, avatar: "🧠", desc: "Plays balanced, basic club chess.", searchDepth: 2, blunderChance: 0.12, positionalWeight: 0.7 },
+                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent vision, occasionally blunders.", searchDepth: 2, blunderChance: 0.09, positionalWeight: 0.8 },
+                { id: "i3", name: "Professor Penny", elo: 1150, avatar: "👓", desc: "Safe developer but misses deep forks.", searchDepth: 3, blunderChance: 0.07, positionalWeight: 0.9 },
+                { id: "i4", name: "Tactical Toby", elo: 1300, avatar: "🏹", desc: "Enjoys sacrifices for space.", searchDepth: 3, blunderChance: 0.05, positionalWeight: 1.0 },
+                { id: "i5", name: "Solid Sophia", elo: 1450, avatar: "🛡️", desc: "Extremely defensive style.", searchDepth: 3, blunderChance: 0.03, positionalWeight: 1.1 }
             ],
             expert: [
-                { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting advanced minor pieces.", searchDepth: 3, blunderChance: 0.02, positionalWeight: 1.2 },
-                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for highly aesthetic mating webs.", searchDepth: 3, blunderChance: 0.01, positionalWeight: 1.3 },
-                { id: "e3", name: "Positional Piper", elo: 1900, avatar: "🪈", desc: "Master of squeezing your pawn structures out.", searchDepth: 4, blunderChance: 0.01, positionalWeight: 1.4 },
-                { id: "e4", name: "Endgame Ethan", elo: 2050, avatar: "⏳", desc: "Swaps off heavy items to win simple endgames.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.5 },
-                { id: "e5", name: "Calculated Chloe", elo: 2150, avatar: "📊", desc: "Deep brute-force checker of structural lines.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.6 }
+                { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting pieces.", searchDepth: 3, blunderChance: 0.02, positionalWeight: 1.2 },
+                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for aesthetic mating webs.", searchDepth: 3, blunderChance: 0.01, positionalWeight: 1.3 },
+                { id: "e3", name: "Positional Piper", elo: 1900, avatar: "🪈", desc: "Master of squeezing structures.", searchDepth: 4, blunderChance: 0.01, positionalWeight: 1.4 },
+                { id: "e4", name: "Endgame Ethan", elo: 2050, avatar: "⏳", desc: "Swaps off to win simple endgames.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.5 },
+                { id: "e5", name: "Calculated Chloe", elo: 2150, avatar: "📊", desc: "Brute-force checker of lines.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.6 }
             ],
             gm: [
                 { id: "g1", name: "King Maker", elo: 2250, avatar: "👑", desc: "Exquisite control over open files.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.7 },
-                { id: "g2", name: "Oracle Owen", elo: 2380, avatar: "🔮", desc: "Foresees positional damage 8 moves away.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.8 },
-                { id: "g3", name: "Blizzard Boris", elo: 2500, avatar: "❄️", desc: "Cold, uncompromising tactical execution.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.9 },
-                { id: "g4", name: "Valkyrie Victoria", elo: 2620, avatar: "⚔️", desc: "Fierce attacks on opposite side castling layouts.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.0 },
-                { id: "g5", name: "Grandmaster Garry", elo: 2750, avatar: "🎖️", desc: "Legendary opening prep specialist.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.1 }
+                { id: "g2", name: "Oracle Owen", elo: 2380, avatar: "🔮", desc: "Foresees damage 8 moves away.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.8 },
+                { id: "g3", name: "Blizzard Boris", elo: 2500, avatar: "❄️", desc: "Cold, uncompromising execution.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.9 },
+                { id: "g4", name: "Valkyrie Victoria", elo: 2620, avatar: "⚔️", desc: "Fierce attacks on opposite castling.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.0 },
+                { id: "g5", name: "Grandmaster Garry", elo: 2750, avatar: "🎖️", desc: "Legendary opening specialist.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.1 }
             ],
             supergm: [
                 { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.3 },
-                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.5 },
-                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.6 },
-                { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot logically conceptualize.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.8 },
+                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.5 },
+                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices for wild initiatives.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.6 },
+                { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot grasp.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.8 },
                 { id: "s5", name: "Chess Buddy Overlord", elo: 3450, avatar: "👽", desc: "Flawless mathematical perfection.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 3.2 }
             ]
         };
+
+        // GOOGLE AUTH LOGIC
+        function handleCredentialResponse(response) {
+            const base64Url = response.credential.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            const user = JSON.parse(jsonPayload);
+            executeNativeLogin(user.name, `<img src="${user.picture}">`);
+            closeAuthModal();
+        }
 
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
@@ -689,7 +663,6 @@
         function updateClockVisualDisplays() {
             document.getElementById('clock-white').innerText = formatTimeDigits(whiteMsLeft);
             document.getElementById('clock-black').innerText = formatTimeDigits(blackMsLeft);
-
             if (game.turn() === 'w') {
                 document.getElementById('timer-w-card').classList.add('active-turn');
                 document.getElementById('timer-b-card').classList.remove('active-turn');
@@ -706,17 +679,13 @@
                 return;
             }
             document.getElementById('clocks-container').style.display = 'flex';
-            
             lastTurnSwitchTimestamp = Date.now();
             updateClockVisualDisplays();
-            
             clockIntervalTracker = setInterval(function() {
                 if (game.game_over()) { clearInterval(clockIntervalTracker); return; }
-                
                 var now = Date.now();
                 var elapsedMs = now - lastTurnSwitchTimestamp;
                 lastTurnSwitchTimestamp = now;
-
                 if (game.turn() === 'w') {
                     whiteMsLeft -= elapsedMs;
                     if (whiteMsLeft <= 0) { whiteMsLeft = 0; clearInterval(clockIntervalTracker); flagOutEndGame('Black'); }
@@ -730,7 +699,6 @@
 
         function flagOutEndGame(winnerColor) {
             clearInterval(clockIntervalTracker);
-            updateClockVisualDisplays();
             document.getElementById('status').innerText = `Game Over - ${winnerColor} wins on time!`;
             compileGameSummary();
         }
@@ -758,7 +726,6 @@
         function updateWinLossPredictionBar() {
             var rawScore = evaluateBoard(game.board(), 1.0) / 100.0;
             document.getElementById('eval-numerical').innerText = (rawScore >= 0 ? "+" : "") + rawScore.toFixed(1);
-
             var whitePercent = Math.min(95, Math.max(5, 50 + (rawScore * 4)));
             document.getElementById('eval-bar-white').style.width = whitePercent + "%";
             document.getElementById('eval-label').innerText = Math.abs(rawScore) > 1.5 ? 
@@ -768,39 +735,27 @@
         function updateStatusAndLog() {
             updateWinLossPredictionBar();
             var statusText = game.game_over() ? "Match Complete!" : (game.turn() === 'w' ? "White to move" : "Black to move");
-            
-            if (isBotThinking && !game.game_over()) {
-                statusText = `⚙️ ${activeBot.name} is calculating lines...`;
-            }
-            
+            if (isBotThinking && !game.game_over()) statusText = `⚙️ ${activeBot.name} is thinking...`;
             document.getElementById('status').innerHTML = statusText;
 
-            // REBUILT MOVELOG PARSER: Forces update directly bypassing asset-load pipelines
             var history = game.history();
             var html = "";
             for (var i = 0; i < history.length; i += 2) {
-                html += `<div class="move-row">` +
-                        `<span class="move-number">${Math.floor(i / 2) + 1}.</span>` +
-                        `<span>${history[i]}</span>` +
-                        `<span>${history[i + 1] || ""}</span>` +
-                        `</div>`;
+                html += `<div class="move-row"><span class="move-number">${Math.floor(i / 2) + 1}.</span><span>${history[i]}</span><span>${history[i + 1] || ""}</span></div>`;
             }
             document.getElementById('move-history').innerHTML = html;
-            
-            var scrollContainer = document.getElementById('move-history');
-            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+            var scroller = document.getElementById('move-history');
+            scroller.scrollTop = scroller.scrollHeight;
 
-            // IMMEDIATE GAME OVER POPUP HOOK
-            if (game.game_over()) {
-                clearInterval(clockIntervalTracker);
-                compileGameSummary();
-            }
+            if (game.game_over()) compileGameSummary();
         }
 
         function compileGameSummary() {
+            // Restore PGN Persistence
+            localStorage.setItem('chessbuddy_last_pgn', game.pgn());
+            
             var baseScore = Math.abs(evaluateBoard(game.board(), 1.0) / 100.0);
             var calculatedAccuracy = Math.max(50, Math.min(99, Math.round(95 - (baseScore * 3))));
-            
             document.getElementById('accuracy-val').innerText = calculatedAccuracy + "%";
             document.getElementById('elo-val').innerText = isLocalFriendMode ? "Unrated" : "Unchanged";
             document.getElementById('gameover-modal').style.display = 'flex';
@@ -812,26 +767,17 @@
         }
 
         function minimaxSearch(depth, isMaximizing, alpha, beta, posFactor) {
-            if (depth === 0 || game.game_over()) {
-                return evaluateBoard(game.board(), posFactor);
-            }
-
+            if (depth === 0 || game.game_over()) return evaluateBoard(game.board(), posFactor);
             var moves = game.moves();
-            moves.sort(function(a, b) {
-                if (b.indexOf('#') !== -1) return 1;
-                if (b.indexOf('+') !== -1) return 1;
-                if (b.indexOf('x') !== -1) return 1;
-                return -1;
-            });
-
+            moves.sort((a,b) => (b.includes('#') || b.includes('+') || b.includes('x')) ? 1 : -1);
             if (isMaximizing) {
                 var maxEval = -Infinity;
                 for (var i = 0; i < moves.length; i++) {
                     game.move(moves[i]);
-                    var evaluation = minimaxSearch(depth - 1, false, alpha, beta, posFactor);
+                    var ev = minimaxSearch(depth - 1, false, alpha, beta, posFactor);
                     game.undo();
-                    maxEval = Math.max(maxEval, evaluation);
-                    alpha = Math.max(alpha, evaluation);
+                    maxEval = Math.max(maxEval, ev);
+                    alpha = Math.max(alpha, ev);
                     if (beta <= alpha) break;
                 }
                 return maxEval;
@@ -839,10 +785,10 @@
                 var minEval = Infinity;
                 for (var i = 0; i < moves.length; i++) {
                     game.move(moves[i]);
-                    var evaluation = minimaxSearch(depth - 1, true, alpha, beta, posFactor);
+                    var ev = minimaxSearch(depth - 1, true, alpha, beta, posFactor);
                     game.undo();
-                    minEval = Math.min(minEval, evaluation);
-                    beta = Math.min(beta, evaluation);
+                    minEval = Math.min(minEval, ev);
+                    beta = Math.min(beta, ev);
                     if (beta <= alpha) break;
                 }
                 return minEval;
@@ -851,94 +797,55 @@
 
         function asyncComputeBotMove(callback) {
             if (game.game_over()) return;
-
             var legalMoves = game.moves();
             if (legalMoves.length === 0) return;
-
             if (Math.random() < activeBot.blunderChance) {
-                var poorMoves = [];
-                for (var i = 0; i < legalMoves.length; i++) {
-                    game.move(legalMoves[i]);
-                    if (!game.in_check()) { poorMoves.push(legalMoves[i]); }
-                    game.undo();
-                }
-                var blunder = poorMoves.length > 0 ? poorMoves[Math.floor(Math.random() * poorMoves.length)] : legalMoves[Math.floor(Math.random() * legalMoves.length)];
-                callback(blunder);
+                callback(legalMoves[Math.floor(Math.random() * legalMoves.length)]);
                 return;
             }
-
             var playerIsWhite = (game.turn() === 'w');
             var bestScore = playerIsWhite ? -Infinity : Infinity;
             var optimalMove = null;
-            var alpha = -Infinity;
-            var beta = Infinity;
-            var index = 0;
-
-            function processNextMoveChunk() {
+            var alpha = -Infinity, beta = Infinity;
+            var idx = 0;
+            function process() {
                 if (!isBotThinking || game.game_over()) return;
-
-                if (index >= legalMoves.length) {
-                    callback(optimalMove || legalMoves[0]);
-                    return;
-                }
-
-                var action = legalMoves[index];
-                game.move(action);
-                var currentEval = minimaxSearch(activeBot.searchDepth - 1, !playerIsWhite, alpha, beta, activeBot.positionalWeight);
+                if (idx >= legalMoves.length) { callback(optimalMove || legalMoves[0]); return; }
+                game.move(legalMoves[idx]);
+                var ev = minimaxSearch(activeBot.searchDepth - 1, !playerIsWhite, alpha, beta, activeBot.positionalWeight);
                 game.undo();
-
-                if (playerIsWhite) {
-                    if (currentEval > bestScore) { bestScore = currentEval; optimalMove = action; }
-                    alpha = Math.max(alpha, bestScore);
-                } else {
-                    if (currentEval < bestScore) { bestScore = currentEval; optimalMove = action; }
-                    beta = Math.min(beta, bestScore);
-                }
-
-                index++;
-                setTimeout(processNextMoveChunk, 1); 
+                if (playerIsWhite) { if (ev > bestScore) { bestScore = ev; optimalMove = legalMoves[idx]; } alpha = Math.max(alpha, bestScore); } 
+                else { if (ev < bestScore) { bestScore = ev; optimalMove = legalMoves[idx]; } beta = Math.min(beta, bestScore); }
+                idx++; setTimeout(process, 1); 
             }
-            processNextMoveChunk();
+            process();
         }
 
         function makeBotMove() {
             if (game.game_over() || !isBotThinking) return;
-            
-            asyncComputeBotMove(function(chosenMove) {
-                if (chosenMove && isBotThinking) {
-                    game.move(chosenMove);
-                    board.position(game.fen());
-                }
+            asyncComputeBotMove(function(m) {
+                if (m && isBotThinking) { game.move(m); board.position(game.fen()); }
                 isBotThinking = false;
-                lastTurnSwitchTimestamp = Date.now(); 
-                updateClockVisualDisplays();
+                lastTurnSwitchTimestamp = Date.now();
                 updateStatusAndLog();
             });
         }
 
-        function removeGreyCircles() { $('#my-board .square-55d63').removeClass('legal-move-marker'); }
-        function greySquare(square) { $('#my-board .square-' + square).addClass('legal-move-marker'); }
-
         function onDragStart(source, piece) {
             if (game.game_over() || isBotThinking) return false;
             if (!isLocalFriendMode && game.turn() === 'b') return false;
-
             var moves = game.moves({ square: source, verbose: true });
             if (moves.length === 0) return;
-            for (var i = 0; i < moves.length; i++) { greySquare(moves[i].to); }
+            for (var i = 0; i < moves.length; i++) { $('#my-board .square-' + moves[i].to).addClass('legal-move-marker'); }
         }
 
         function onDrop(source, target) {
-            removeGreyCircles();
+            $('.square-55d63').removeClass('legal-move-marker');
             if (isBotThinking) return 'snapback';
-
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
-
             lastTurnSwitchTimestamp = Date.now();
-            updateClockVisualDisplays();
             updateStatusAndLog();
-            
             if (!isLocalFriendMode && !game.game_over()) { 
                 isBotThinking = true;
                 updateStatusAndLog();
@@ -949,37 +856,25 @@
         function resetGame() {
             whiteMsLeft = timerDurationSeconds * 1000;
             blackMsLeft = timerDurationSeconds * 1000;
-            lastTurnSwitchTimestamp = null;
             isBotThinking = false;
-            
             game.reset();
             board.start();
-            removeGreyCircles();
             updateStatusAndLog();
             startClockCountingLogic();
         }
 
         window.onload = function() {
             board = Chessboard('my-board', {
-                position: 'start',
-                draggable: true,
+                position: 'start', draggable: true,
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-                onDragStart: onDragStart,
-                onDrop: onDrop,
-                onSnapbackEnd: removeGreyCircles
+                onDragStart: onDragStart, onDrop: onDrop
             });
-
             showcaseBoard = Chessboard('showcase-board', {
-                position: 'start',
-                draggable: false,
+                position: 'start', draggable: false,
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
-
             initVerticalLobby();
-            window.setTimeout(function() {
-                showcaseBoard.resize();
-                board.resize();
-            }, 150);
+            window.setTimeout(() => { showcaseBoard.resize(); board.resize(); }, 150);
         };
     </script>
 </body>
