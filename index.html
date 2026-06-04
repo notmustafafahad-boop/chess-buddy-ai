@@ -493,6 +493,7 @@
         var isLocalFriendMode = false; 
         var selectedTimerConfig = "Untimed";
         var timerDurationSeconds = 0;
+        var isBotThinking = false;
         
         // High-Precision Engine States (Stored as Milliseconds)
         var whiteMsLeft = 0;
@@ -671,27 +672,6 @@
             }
         }
 
-        function switchClockTurns() {
-            if (timerDurationSeconds === 0) return;
-            
-            var now = Date.now();
-            if (lastTurnSwitchTimestamp !== null) {
-                var elapsedMs = now - lastTurnSwitchTimestamp;
-                
-                // Deduct from whoever JUST completed their move.
-                // If game.turn() is now 'b', it means White just dropped their piece.
-                if (game.turn() === 'b') { 
-                    whiteMsLeft -= elapsedMs;
-                    if (whiteMsLeft <= 0) { whiteMsLeft = 0; flagOutEndGame('Black'); return; }
-                } else {
-                    blackMsLeft -= elapsedMs;
-                    if (blackMsLeft <= 0) { blackMsLeft = 0; flagOutEndGame('White'); return; }
-                }
-            }
-            lastTurnSwitchTimestamp = now;
-            updateClockVisualDisplays();
-        }
-
         function startClockCountingLogic() {
             clearInterval(clockIntervalTracker);
             if (timerDurationSeconds === 0) {
@@ -755,6 +735,11 @@
         function updateStatusAndLog() {
             updateWinLossPredictionBar();
             var statusText = game.game_over() ? "Match Complete!" : (game.turn() === 'w' ? "White to move" : "Black to move");
+            
+            if (isBotThinking && !game.game_over()) {
+                statusText = `${activeBot.name} is thinking...`;
+            }
+            
             document.getElementById('status').innerHTML = statusText;
 
             if (game.game_over()) {
@@ -782,14 +767,25 @@
         }
 
         function makeBotMove() {
-            if (game.game_over()) return;
+            if (game.game_over()) {
+                isBotThinking = false;
+                return;
+            }
+            
             var moves = game.moves();
-            if (moves.length === 0) return;
+            if (moves.length === 0) {
+                isBotThinking = false;
+                return;
+            }
             
             game.move(moves[Math.floor(Math.random() * moves.length)]);
             board.position(game.fen());
             
-            switchClockTurns(); 
+            isBotThinking = false;
+            
+            // Sync engine timestamp cleanly when the bot finally completes its turn execution
+            lastTurnSwitchTimestamp = Date.now();
+            updateClockVisualDisplays();
             updateStatusAndLog();
         }
 
@@ -797,7 +793,7 @@
         function greySquare(square) { $('#my-board .square-' + square).addClass('legal-move-marker'); }
 
         function onDragStart(source, piece) {
-            if (game.game_over()) return false;
+            if (game.game_over() || isBotThinking) return false;
             if (!isLocalFriendMode && game.turn() === 'b') return false;
 
             var moves = game.moves({ square: source, verbose: true });
@@ -807,14 +803,23 @@
 
         function onDrop(source, target) {
             removeGreyCircles();
+            if (isBotThinking) return 'snapback';
+
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
-            switchClockTurns(); 
+            // Sync engine timestamp cleanly when player drops their piece
+            lastTurnSwitchTimestamp = Date.now();
+            updateClockVisualDisplays();
             updateStatusAndLog();
             
             if (!isLocalFriendMode && !game.game_over()) { 
-                window.setTimeout(makeBotMove, 300); 
+                isBotThinking = true;
+                updateStatusAndLog();
+                
+                // Humanized computational latency between 900ms and 1600ms
+                var calculatedThinkingDelay = Math.floor(Math.random() * 700) + 900;
+                window.setTimeout(makeBotMove, calculatedThinkingDelay); 
             }
         }
 
@@ -822,6 +827,7 @@
             whiteMsLeft = timerDurationSeconds * 1000;
             blackMsLeft = timerDurationSeconds * 1000;
             lastTurnSwitchTimestamp = null;
+            isBotThinking = false;
             
             game.reset();
             board.start();
