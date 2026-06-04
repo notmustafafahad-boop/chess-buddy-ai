@@ -495,7 +495,6 @@
         var timerDurationSeconds = 0;
         var isBotThinking = false;
         
-        // High-Precision Engine States (Stored as Milliseconds)
         var whiteMsLeft = 0;
         var blackMsLeft = 0;
         var lastTurnSwitchTimestamp = null;
@@ -507,10 +506,8 @@
             avatar: "🦊"
         };
 
-        // Core piece value map used for search metrics
         const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
 
-        // Positional square evaluation matrix to provide strategic positioning values
         const POSITION_WEIGHTS = {
             p: [
                 [0,  0,  0,  0,  0,  0,  0,  0],
@@ -605,8 +602,8 @@
             ],
             supergm: [
                 { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.2 },
-                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.4 },
-                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.5 },
+                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.4 },
+                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.5 },
                 { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot logically conceptualize.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.7 },
                 { id: "s5", name: "Chess Buddy Overlord", elo: 3450, avatar: "👽", desc: "Flawless mathematical perfection.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 3.0 }
             ]
@@ -775,7 +772,6 @@
             compileGameSummary();
         }
 
-        // Positional evaluator used to score FEN configurations
         function evaluateBoard(boardState, posWeightFactor = 1.0) {
             var score = 0;
             for (var i = 0; i < 8; i++) {
@@ -783,15 +779,11 @@
                     var piece = boardState[i][j];
                     if (piece) {
                         var baseVal = PIECE_VALUES[piece.type];
-                        
-                        // Apply positional matrices if available
                         var pWeight = 0;
                         if (POSITION_WEIGHTS[piece.type]) {
-                            // Flip the board row coordinate index layout for black pieces
                             var row = (piece.color === 'w') ? (7 - i) : i;
                             pWeight = POSITION_WEIGHTS[piece.type][row][j] * posWeightFactor;
                         }
-
                         var squareValue = baseVal + pWeight;
                         score += (piece.color === 'w' ? squareValue : -squareValue);
                     }
@@ -844,15 +836,22 @@
             quitActiveMatch();
         }
 
-        /**
-         * Minimax search with Alpha-Beta pruning to provide ELO scaling.
-         */
         function minimaxSearch(depth, isMaximizing, alpha, beta, posFactor) {
             if (depth === 0 || game.game_over()) {
                 return evaluateBoard(game.board(), posFactor);
             }
 
             var moves = game.moves();
+            
+            // Optimization: Move Ordering. 
+            // Checking captures and checks first allows Alpha-Beta to prune branches MUCH faster.
+            moves.sort(function(a, b) {
+                if (b.indexOf('#') !== -1) return 1;
+                if (b.indexOf('+') !== -1) return 1;
+                if (b.indexOf('x') !== -1) return 1;
+                return -1;
+            });
+
             if (isMaximizing) {
                 var maxEval = -Infinity;
                 for (var i = 0; i < moves.length; i++) {
@@ -878,64 +877,59 @@
             }
         }
 
-        /**
-         * Evaluates legal variants, selects an action based on Bot parameters,
-         * and applies blunder parameters dynamically.
-         */
-        function computeAdaptiveBotMove() {
-            if (game.game_over()) return null;
+        // ASYNC BOT BRAIN: Prevents UI from freezing during deep calculations
+        function asyncComputeBotMove(callback) {
+            if (game.game_over()) return;
 
             var legalMoves = game.moves();
-            if (legalMoves.length === 0) return null;
+            if (legalMoves.length === 0) return;
 
-            // Trigger artificial oversight if blunder check triggers
+            // Handle Blunders for easier bots
             if (Math.random() < activeBot.blunderChance) {
-                // Find hanging pieces or choose a random move for lower-rated bots
                 var poorMoves = [];
                 for (var i = 0; i < legalMoves.length; i++) {
                     game.move(legalMoves[i]);
-                    if (!game.in_check()) {
-                        poorMoves.push(legalMoves[i]);
-                    }
+                    if (!game.in_check()) { poorMoves.push(legalMoves[i]); }
                     game.undo();
                 }
-                if (poorMoves.length > 0) {
-                    return poorMoves[Math.floor(Math.random() * poorMoves.length)];
-                }
-                return legalMoves[Math.floor(Math.random() * legalMoves.length)];
+                var blunder = poorMoves.length > 0 ? poorMoves[Math.floor(Math.random() * poorMoves.length)] : legalMoves[Math.floor(Math.random() * legalMoves.length)];
+                callback(blunder);
+                return;
             }
 
-            // Execute alpha-beta pruned minimax calculations
-            var optimalMove = null;
             var playerIsWhite = (game.turn() === 'w');
             var bestScore = playerIsWhite ? -Infinity : Infinity;
+            var optimalMove = null;
+            var alpha = -Infinity;
+            var beta = Infinity;
+            var index = 0;
 
-            // Shuffle moves to add variability between positions with identical scores
-            legalMoves.sort(() => 0.5 - Math.random());
+            // Process moves in chunks using setTimeout(0) to keep the browser alive
+            function processNextMove() {
+                if (index >= legalMoves.length || !isBotThinking) {
+                    callback(optimalMove || legalMoves[0]);
+                    return;
+                }
 
-            for (var i = 0; i < legalMoves.length; i++) {
-                var action = legalMoves[i];
+                var action = legalMoves[index];
                 game.move(action);
-                
-                // Deep scan matching the current bot's search depth configuration
-                var currentEval = minimaxSearch(activeBot.searchDepth - 1, !playerIsWhite, -Infinity, Infinity, activeBot.positionalWeight);
+                var currentEval = minimaxSearch(activeBot.searchDepth - 1, !playerIsWhite, alpha, beta, activeBot.positionalWeight);
                 game.undo();
 
                 if (playerIsWhite) {
-                    if (currentEval > bestScore) {
-                        bestScore = currentEval;
-                        optimalMove = action;
-                    }
+                    if (currentEval > bestScore) { bestScore = currentEval; optimalMove = action; }
+                    alpha = Math.max(alpha, bestScore);
                 } else {
-                    if (currentEval < bestScore) {
-                        bestScore = currentEval;
-                        optimalMove = action;
-                    }
+                    if (currentEval < bestScore) { bestScore = currentEval; optimalMove = action; }
+                    beta = Math.min(beta, bestScore);
                 }
+
+                index++;
+                // Smallest possible delay allows the clock to tick and UI to render between move checks
+                setTimeout(processNextMove, 0); 
             }
 
-            // Fallback safety filter
-            return optimalMove || legalMoves[0];
+            processNextMove();
         }
 
         function makeBotMove() {
@@ -944,18 +938,17 @@
                 return;
             }
             
-            var chosenMove = computeAdaptiveBotMove();
-            if (chosenMove) {
-                game.move(chosenMove);
-                board.position(game.fen());
-            }
-            
-            isBotThinking = false;
-            
-            // Sync engine timestamp cleanly when the bot finally completes its turn execution
-            lastTurnSwitchTimestamp = Date.now();
-            updateClockVisualDisplays();
-            updateStatusAndLog();
+            asyncComputeBotMove(function(chosenMove) {
+                if (chosenMove) {
+                    game.move(chosenMove);
+                    board.position(game.fen());
+                }
+                
+                isBotThinking = false;
+                lastTurnSwitchTimestamp = Date.now(); // Reset timestamp so bot thinking time isn't penalized to human
+                updateClockVisualDisplays();
+                updateStatusAndLog();
+            });
         }
 
         function removeGreyCircles() { $('#my-board .square-55d63').removeClass('legal-move-marker'); }
@@ -977,7 +970,6 @@
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
-            // Sync engine timestamp cleanly when player drops their piece
             lastTurnSwitchTimestamp = Date.now();
             updateClockVisualDisplays();
             updateStatusAndLog();
@@ -985,10 +977,8 @@
             if (!isLocalFriendMode && !game.game_over()) { 
                 isBotThinking = true;
                 updateStatusAndLog();
-                
-                // Humanized computational latency between 900ms and 1600ms
-                var calculatedThinkingDelay = Math.floor(Math.random() * 700) + 900;
-                window.setTimeout(makeBotMove, calculatedThinkingDelay); 
+                // Add a small artificial delay so the bot doesn't move instantly
+                window.setTimeout(makeBotMove, 600); 
             }
         }
 
