@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Buddy AI - Premium Interactive Grid</title>
     
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     
     <style>
@@ -323,7 +322,8 @@
         <div class="logo-text">♟️ CHESSBUDDY</div>
         <div class="nav-auth-buttons">
             <div id="logged-out-view" style="display: flex; gap: 12px;">
-                <button class="btn-nav primary" onclick="openAuthModal('login')">Log In / Sign Up</button>
+                <button class="btn-nav" onclick="openAuthModal('login')">Log In</button>
+                <button class="btn-nav primary" onclick="openAuthModal('signup')">Sign Up</button>
             </div>
             <div id="logged-in-view" class="user-profile-badge">
                 <span id="user-avatar-container" class="user-avatar">🦊</span>
@@ -433,15 +433,6 @@
             <h2 id="auth-title" style="margin-top:0; color:var(--chess-green);">Welcome back</h2>
             <p id="auth-subtitle" style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Synchronize profiles & performance history.</p>
             
-            <div id="g_id_onload"
-                 data-client_id="342294129862-bu1j9f349uip99to9f0t5pfiliuki1f4.apps.googleusercontent.com"
-                 data-callback="handleCredentialResponse"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-width="320"></div>
-
-            <div class="divider">OR USE EMAIL</div>
-
             <input type="text" id="auth-username" class="auth-input" placeholder="Username" value="guest_grandmaster">
             <input type="password" id="auth-password" class="auth-input" placeholder="Security Password" value="password123">
             <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" onclick="handleNativeAuthSubmission()">Authenticate</button>
@@ -495,56 +486,11 @@
         var lastTurnSwitchTimestamp = null;
         var clockIntervalTracker = null;
 
-        var currentUserSession = null;
-
-        // --- AUTHENTICATION LOGIC ---
-
-        function handleCredentialResponse(response) {
-            // Decode the JWT from Google
-            const base64Url = response.credential.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            const userData = JSON.parse(jsonPayload);
-            
-            // Execute login with Google Profile info
-            executeNativeLogin(userData.name, `<img src="${userData.picture}" style="width:100%; height:100%;">`);
-            document.getElementById('auth-modal').style.display = 'none';
-        }
-
-        function openAuthModal(mode) { 
-            document.getElementById('auth-title').innerText = mode === 'login' ? "Welcome back" : "Make an account";
-            document.getElementById('auth-modal').style.display = 'flex';
-        }
-        
-        function closeAuthModal(e) { document.getElementById('auth-modal').style.display = 'none'; }
-
-        function handleNativeAuthSubmission() {
-            var typedUsername = document.getElementById('auth-username').value.trim() || "Guest Master";
-            document.getElementById('auth-modal').style.display = 'none';
-            executeNativeLogin(typedUsername, '🦊');
-        }
-
-        function executeNativeLogin(username, avatarMarkup) {
-            currentUserSession = { username: username, displayElo: 500, avatar: avatarMarkup };
-            document.getElementById('profile-display-name').innerText = currentUserSession.username;
-            document.getElementById('user-avatar-container').innerHTML = currentUserSession.avatar;
-            document.getElementById('profile-display-elo').innerText = currentUserSession.displayElo;
-            document.getElementById('logged-out-view').style.display = 'none';
-            document.getElementById('logged-in-view').style.display = 'flex';
-        }
-
-        function triggerLogout() {
-            currentUserSession = null;
-            document.getElementById('logged-in-view').style.display = 'none';
-            document.getElementById('logged-out-view').style.display = 'flex';
-            // Also refresh page to clear Google session state if desired
-            location.reload(); 
-        }
-
-        // --- CHESS ENGINE & BOTS LOGIC ---
+        var currentUserSession = {
+            username: "guest_grandmaster",
+            displayElo: 500,
+            avatar: "🦊"
+        };
 
         const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
 
@@ -656,6 +602,34 @@
             if (screenId === 'game-screen' && board) {
                 window.setTimeout(function() { board.resize(); }, 100);
             }
+        }
+
+        function openAuthModal(mode) { 
+            document.getElementById('auth-title').innerText = mode === 'login' ? "Welcome back" : "Make an account";
+            document.getElementById('auth-modal').style.display = 'flex';
+        }
+        
+        function closeAuthModal(e) { document.getElementById('auth-modal').style.display = 'none'; }
+
+        function handleNativeAuthSubmission() {
+            var typedUsername = document.getElementById('auth-username').value.trim() || "Guest Master";
+            document.getElementById('auth-modal').style.display = 'none';
+            executeNativeLogin(typedUsername, '🦊');
+        }
+
+        function executeNativeLogin(username, avatarMarkup) {
+            currentUserSession = { username: username, displayElo: 500, avatar: avatarMarkup };
+            document.getElementById('profile-display-name').innerText = currentUserSession.username;
+            document.getElementById('user-avatar-container').innerHTML = currentUserSession.avatar;
+            document.getElementById('profile-display-elo').innerText = currentUserSession.displayElo;
+            document.getElementById('logged-out-view').style.display = 'none';
+            document.getElementById('logged-in-view').style.display = 'flex';
+        }
+
+        function triggerLogout() {
+            currentUserSession = null;
+            document.getElementById('logged-in-view').style.display = 'none';
+            document.getElementById('logged-out-view').style.display = 'flex';
         }
 
         function initVerticalLobby() {
