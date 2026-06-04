@@ -718,7 +718,7 @@
             lastTurnSwitchTimestamp = Date.now();
             updateClockVisualDisplays();
             
-            // ARCHITECTURAL FIX: 100% centralized background ticker calculation
+            // Unified asynchronous engine loop
             clockIntervalTracker = setInterval(function() {
                 if (game.game_over()) { clearInterval(clockIntervalTracker); return; }
                 
@@ -887,7 +887,7 @@
             if (selectedMove) {
                 game.move(selectedMove);
                 board.position(game.fen());
-                // Clock handles target swap automatically via game.turn() inside delta loop
+                // Delta loop reads game.turn() dynamically to change tracking context
                 updateStatusAndLog();
             }
         }
@@ -909,7 +909,7 @@
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
-            // Clock handles target swap automatically via game.turn() inside delta loop
+            // Delta loop reads game.turn() dynamically to change tracking context
             updateStatusAndLog();
             
             if (!isLocalFriendMode) { 
