@@ -494,7 +494,6 @@
         var selectedTimerConfig = "Untimed";
         var timerDurationSeconds = 0;
         
-        // High-Precision Engine States (Stored as Milliseconds)[cite: 1]
         var whiteMsLeft = 0;
         var blackMsLeft = 0;
         var lastTurnSwitchTimestamp = null;
@@ -544,7 +543,6 @@
             ]
         };
 
-        // Positional Evaluation Matrix Layout Arrays
         const pstPawn = [
             [0,  0,  0,  0,  0,  0,  0,  0], [50, 50, 50, 50, 50, 50, 50, 50],
             [10, 10, 20, 30, 30, 20, 10, 10], [ 5,  5, 10, 25, 25, 10,  5,  5],
@@ -696,7 +694,6 @@
             return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
         }
 
-        // --- FIXED CORE TIMER SYSTEM ---
         function updateClockVisualDisplays() {
             document.getElementById('clock-white').innerText = formatTimeDigits(whiteMsLeft);
             document.getElementById('clock-black').innerText = formatTimeDigits(blackMsLeft);
@@ -710,9 +707,11 @@
             }
         }
 
+        // --- TIMER BUG FIX: DELTA POLLING ENGINE ---
         function switchClockTurns() {
             if (timerDurationSeconds === 0) return;
-            // The single background loop decrements everything smoothly, we just refresh the reference frame
+            
+            // Re-align the frame to current instant so no time drops out across turns
             lastTurnSwitchTimestamp = Date.now();
             updateClockVisualDisplays();
         }
@@ -728,6 +727,7 @@
             lastTurnSwitchTimestamp = Date.now();
             updateClockVisualDisplays();
             
+            // Single absolute delta-subtraction background engine
             clockIntervalTracker = setInterval(function() {
                 if (game.game_over()) { clearInterval(clockIntervalTracker); return; }
                 
@@ -814,7 +814,6 @@
             quitActiveMatch();
         }
 
-        // --- STRENGTH ENGINE AND STRATEGIC TREE BRANCHES ---
         function getBotSearchDepth(elo) {
             if (elo < 800) return 1;
             if (elo < 1500) return 2;
