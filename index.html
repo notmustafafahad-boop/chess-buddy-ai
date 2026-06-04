@@ -707,15 +707,6 @@
             }
         }
 
-        // --- TIMER BUG FIX: DELTA POLLING ENGINE ---
-        function switchClockTurns() {
-            if (timerDurationSeconds === 0) return;
-            
-            // Re-align the frame to current instant so no time drops out across turns
-            lastTurnSwitchTimestamp = Date.now();
-            updateClockVisualDisplays();
-        }
-
         function startClockCountingLogic() {
             clearInterval(clockIntervalTracker);
             if (timerDurationSeconds === 0) {
@@ -727,7 +718,7 @@
             lastTurnSwitchTimestamp = Date.now();
             updateClockVisualDisplays();
             
-            // Single absolute delta-subtraction background engine
+            // ARCHITECTURAL FIX: 100% centralized background ticker calculation
             clockIntervalTracker = setInterval(function() {
                 if (game.game_over()) { clearInterval(clockIntervalTracker); return; }
                 
@@ -896,7 +887,7 @@
             if (selectedMove) {
                 game.move(selectedMove);
                 board.position(game.fen());
-                switchClockTurns(); 
+                // Clock handles target swap automatically via game.turn() inside delta loop
                 updateStatusAndLog();
             }
         }
@@ -918,7 +909,7 @@
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
-            switchClockTurns();
+            // Clock handles target swap automatically via game.turn() inside delta loop
             updateStatusAndLog();
             
             if (!isLocalFriendMode) { 
