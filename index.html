@@ -27,7 +27,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
@@ -276,6 +276,43 @@
         .move-row { display: grid; grid-template-columns: 45px 145px 145px; padding: 8px 0; border-bottom: 1px solid #252525; text-align: left; }
         .move-number { color: #757575; }
 
+        /* History & Review System Styles */
+        .history-section-wrapper {
+            max-width: 1100px;
+            width: 100%;
+            margin: 30px auto 50px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        .history-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .history-title-main { font-size: 18px; font-weight: bold; color: var(--chess-green); margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; text-align: left;}
+        .history-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .history-table th { background: #252525; padding: 12px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border-color); }
+        .history-table td { padding: 12px; border-bottom: 1px solid #252525; color: #fff; }
+        .history-table tr:hover td { background: #222; }
+        .badge-result { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .badge-win { background: rgba(129, 182, 76, 0.2); color: var(--chess-green); }
+        .badge-loss { background: rgba(230, 126, 34, 0.2); color: #e67e22; }
+        .badge-draw { background: rgba(255, 255, 255, 0.1); color: #aaa; }
+        .review-btn { background: #3498db; border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .review-btn:hover { background: #2980b9; }
+        .empty-history { text-align: center; color: #666; padding: 30px 0; font-style: italic; }
+
+        .review-controls {
+            display: none;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+        .ctrl-btn { background: #252525; border: 1px solid #444; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .ctrl-btn:hover { background: #333; border-color: var(--chess-green); }
+
         .legal-move-marker { position: relative; }
         .legal-move-marker::after {
             content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -297,6 +334,8 @@
             color: white; border-radius: 4px; box-sizing: border-box; outline: none;
         }
         .auth-input:focus { border-color: var(--chess-green); }
+
+        .error-msg { color: #e74c3c; font-size: 13px; margin: 5px 0; display: none; text-align: left; font-weight: 500; }
 
         .google-btn-wrapper {
             display: flex;
@@ -416,6 +455,13 @@
                     <button id="restart-btn" onclick="resetGame()">Restart</button>
                 </div>
                 <div id="my-board"></div>
+                
+                <!-- Game Review Interface Controls -->
+                <div class="review-controls" id="review-control-panel">
+                    <button class="ctrl-btn" onclick="stepReviewMove(-1)">◀ Prev Move</button>
+                    <button class="ctrl-btn" onclick="stepReviewMove(1)">Next Move ▶</button>
+                    <button class="ctrl-btn" style="background:#e67e22; border-color:#e67e22;" onclick="exitReviewMode()">Exit Review</button>
+                </div>
             </div>
 
             <div class="sidebar">
@@ -437,6 +483,29 @@
         </div>
     </div>
 
+    <!-- Match History Global Tab Dashboard -->
+    <div class="history-section-wrapper">
+        <div class="history-panel">
+            <h3 class="history-title-main">📊 Match Performance History</h3>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Opponent Mode</th>
+                        <th>Clock Set</th>
+                        <th>Result Outcome</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="history-rows-container">
+                    <tr>
+                        <td colspan="5" class="empty-history">No matches played yet. Start a match above to populate logs!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="auth-modal" onclick="closeAuthModal(event)">
         <div class="auth-card" onclick="event.stopPropagation()">
             <h2 id="auth-title" style="margin-top:0; color:var(--chess-green);">Welcome back</h2>
@@ -448,7 +517,8 @@
             
             <div class="divider">or use credentials</div>
             <input type="text" id="auth-username" class="auth-input" placeholder="Username" value="notmustafa.fahad">
-            <input type="password" id="auth-password" class="auth-input" placeholder="Security Password" value="password123">
+            <input type="password" id="auth-password" class="auth-input" placeholder="Security Password" value="">
+            <div id="auth-error" class="error-msg">⚠️ Password cannot be blank. Please enter a valid password string.</div>
             <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" onclick="handleNativeAuthSubmission()">Authenticate</button>
         </div>
     </div>
@@ -497,6 +567,12 @@
         var whiteTimeLeft = 0;
         var blackTimeLeft = 0;
         var clockIntervalTracker = null;
+
+        var isReviewModeActive = false;
+        var reviewMovesArray = [];
+        var currentReviewIndex = -1;
+
+        var matchLogDatabase = [];
 
         var currentUserSession = {
             username: "notmustafa.fahad",
@@ -617,12 +693,8 @@
             }).join(''));
 
             const googleUserData = JSON.parse(jsonPayload);
-            
-            var fullGoogleName = googleUserData.name;
-            var googleProfilePic = googleUserData.picture;
-
+            executeNativeLogin(googleUserData.name, `<img src="${googleUserData.picture}">`);
             document.getElementById('auth-modal').style.display = 'none';
-            executeNativeLogin(fullGoogleName, `<img src="${googleProfilePic}">`);
         }
 
         function initGoogleIdentityAuth() {
@@ -650,6 +722,7 @@
 
         function openAuthModal(mode) { 
             const titleEl = document.getElementById('auth-title');
+            document.getElementById('auth-error').style.display = 'none';
             if (mode === 'login') {
                 titleEl.innerText = "Welcome back";
             } else {
@@ -661,8 +734,18 @@
         
         function closeAuthModal(e) { document.getElementById('auth-modal').style.display = 'none'; }
 
+        // FIXED: Enforce absolute rule requiring password content string verification
         function handleNativeAuthSubmission() {
             var typedUsername = document.getElementById('auth-username').value.trim();
+            var typedPassword = document.getElementById('auth-password').value.trim();
+            var errorLabel = document.getElementById('auth-error');
+
+            if (!typedPassword) {
+                errorLabel.style.display = 'block';
+                return; // Blocks execution completely
+            }
+
+            errorLabel.style.display = 'none';
             if(!typedUsername) typedUsername = "Guest Master";
             document.getElementById('auth-modal').style.display = 'none';
             executeNativeLogin(typedUsername, '🦊');
@@ -725,6 +808,7 @@
 
         function quitActiveMatch() {
             clearInterval(clockIntervalTracker);
+            exitReviewMode();
             switchScreen('home-screen');
         }
 
@@ -737,7 +821,7 @@
 
         function startClockCountingLogic() {
             clearInterval(clockIntervalTracker);
-            if (timerDurationSeconds === 0) {
+            if (timerDurationSeconds === 0 || isReviewModeActive) {
                 document.getElementById('clocks-container').style.display = 'none';
                 return;
             }
@@ -751,24 +835,23 @@
                     document.getElementById('clock-white').innerText = formatTimeDigits(whiteTimeLeft);
                     document.getElementById('timer-w-card').classList.add('active-turn');
                     document.getElementById('timer-b-card').classList.remove('active-turn');
-                    if (whiteTimeLeft <= 0) { flagOutEndGame('Black'); }
+                    if (whiteTimeLeft <= 0) { flagOutEndGame('Black (Timeout)'); }
                 } else {
                     blackTimeLeft--;
                     document.getElementById('clock-black').innerText = formatTimeDigits(blackTimeLeft);
                     document.getElementById('timer-b-card').classList.add('active-turn');
                     document.getElementById('timer-w-card').classList.remove('active-turn');
-                    if (blackTimeLeft <= 0) { flagOutEndGame('White'); }
+                    if (blackTimeLeft <= 0) { flagOutEndGame('White (Timeout)'); }
                 }
             }, 1000);
         }
 
-        function flagOutEndGame(winnerColor) {
+        function flagOutEndGame(outcomeLabel) {
             clearInterval(clockIntervalTracker);
-            document.getElementById('status').innerText = `Game Over - ${winnerColor} wins on time!`;
-            compileGameSummary();
+            document.getElementById('status').innerText = `Game Over - Winner: ${outcomeLabel}`;
+            compileGameSummary(outcomeLabel);
         }
 
-        // Deep evaluation engine utilizing positional matrices 
         function evaluateBoard(boardState) {
             var score = 0;
             for (var r = 0; r < 8; r++) {
@@ -794,7 +877,6 @@
             return score / 10.0;
         }
 
-        // Alpha-Beta Minimax Engine Core Strategy Processor
         function minimax(depth, alpha, beta, isMaximizing) {
             if (depth === 0 || game.game_over()) {
                 return evaluateBoard(game.board());
@@ -850,7 +932,12 @@
             if (game.game_over()) {
                 statusText = "Match Complete!";
                 clearInterval(clockIntervalTracker);
-                setTimeout(compileGameSummary, 600);
+                
+                var finalOutcome = "Draw";
+                if (game.in_checkmate()) {
+                    finalOutcome = (game.turn() === 'b') ? "White Wins" : "Black Wins";
+                }
+                setTimeout(() => compileGameSummary(finalOutcome), 600);
             } else {
                 statusText = game.turn() === 'w' ? "White to move" : "Black to move";
             }
@@ -864,7 +951,8 @@
             document.getElementById('move-history').innerHTML = html;
         }
 
-        function compileGameSummary() {
+        // NEW: Enters historical review data logging structures upon game termination
+        function compileGameSummary(outcomeLabel) {
             var score = evaluateBoard(game.board());
             var dynamicAccuracy = 50; 
             if (game.in_checkmate()) {
@@ -875,6 +963,105 @@
             document.getElementById('accuracy-val').innerText = dynamicAccuracy + "%";
             document.getElementById('elo-val').innerText = "Unchanged";
             document.getElementById('gameover-modal').style.display = 'flex';
+
+            // Push game record to array database 
+            var opponentName = isLocalFriendMode ? "Local Friend" : (activeBot ? activeBot.name : "AI Bot");
+            var currentDateTimeStr = new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            matchLogDatabase.push({
+                date: currentDateTimeStr,
+                opponent: opponentName,
+                timer: selectedTimerConfig,
+                result: outcomeLabel,
+                moves: game.history()
+            });
+
+            rebuildMatchHistoryTableUI();
+        }
+
+        // NEW: Redraw panel history logs
+        function rebuildMatchHistoryTableUI() {
+            var container = document.getElementById('history-rows-container');
+            if (matchLogDatabase.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" class="empty-history">No matches played yet. Start a match above to populate logs!</td></tr>`;
+                return;
+            }
+
+            var htmlText = "";
+            matchLogDatabase.forEach((match, index) => {
+                var badgeClass = "badge-draw";
+                if (match.result.includes("White Wins")) badgeClass = "badge-win";
+                if (match.result.includes("Black Wins")) badgeClass = "badge-loss";
+
+                htmlText += `<tr>
+                    <td>${match.date}</td>
+                    <td><strong>${match.opponent}</strong></td>
+                    <td>${match.timer}</td>
+                    <td><span class="badge-result ${badgeClass}">${match.result}</span></td>
+                    <td><button class="review-btn" onclick="launchGameReview(${index})">🔎 Review</button></td>
+                </tr>`;
+            });
+            container.innerHTML = htmlText;
+        }
+
+        // NEW: Loads past game arrays into historical navigation review engine
+        function launchGameReview(index) {
+            var targetedMatch = matchLogDatabase[index];
+            if (!targetedMatch || targetedMatch.moves.length === 0) return;
+
+            isReviewModeActive = true;
+            reviewMovesArray = [...targetedMatch.moves];
+            currentReviewIndex = reviewMovesArray.length - 1;
+
+            document.getElementById("matchup-header").innerText = `Review Mode: vs ${targetedMatch.opponent}`;
+            document.getElementById("restart-btn").style.display = "none";
+            document.getElementById("review-control-panel").style.display = "flex";
+            document.getElementById('clocks-container').style.display = 'none';
+
+            switchScreen('game-screen');
+            reconstructReviewPositionBoard();
+        }
+
+        // NEW: Navigates back and forth inside history arrays safely
+        function stepReviewMove(direction) {
+            var targetIndex = currentReviewIndex + direction;
+            if (targetIndex >= -1 && targetIndex < reviewMovesArray.length) {
+                currentReviewIndex = targetIndex;
+                reconstructReviewPositionBoard();
+            }
+        }
+
+        // NEW: Regenerates board setups based on current review position index step
+        function reconstructReviewPositionBoard() {
+            var tempGame = new Chess();
+            for (var i = 0; i <= currentReviewIndex; i++) {
+                tempGame.move(reviewMovesArray[i]);
+            }
+            board.position(tempGame.fen(), true);
+
+            // Update layout move logs text to visually guide user 
+            var logHtml = "";
+            for (var i = 0; i < reviewMovesArray.length; i += 2) {
+                var isSelectedW = (i === currentReviewIndex) ? "background:rgba(52, 152, 219, 0.3); padding:2px 4px; border-radius:2px;" : "";
+                var isSelectedB = ((i + 1) === currentReviewIndex) ? "background:rgba(52, 152, 219, 0.3); padding:2px 4px; border-radius:2px;" : "";
+                
+                logHtml += `<div class="move-row">
+                    <span class="move-number">${Math.floor(i/2)+1}.</span>
+                    <span style="${isSelectedW}">${reviewMovesArray[i]}</span>
+                    <span style="${isSelectedB}">${reviewMovesArray[i+1]||""}</span>
+                </div>`;
+            }
+            document.getElementById('move-history').innerHTML = logHtml;
+            document.getElementById('status').innerHTML = `Review Mode: Viewing move ${currentReviewIndex + 1} of ${reviewMovesArray.length}`;
+            updateWinLossPredictionBar();
+        }
+
+        // NEW: Safe teardown of review UI and switches back to default play configurations
+        function exitReviewMode() {
+            isReviewModeActive = false;
+            document.getElementById("restart-btn").style.display = "block";
+            document.getElementById("review-control-panel").style.display = "none";
+            resetGame();
         }
 
         function closeModalAndExit() {
@@ -883,19 +1070,18 @@
         }
 
         function makeBotMove() {
-            if (game.game_over()) return;
+            if (game.game_over() || isReviewModeActive) return;
 
             var moves = game.moves();
             if (moves.length === 0) return;
 
             var selectedMove = null;
 
-            // Blunder calculation layer
             if (activeBot && Math.random() < activeBot.blunderChance) {
                 selectedMove = moves[Math.floor(Math.random() * moves.length)];
             } else {
                 var targetDepth = activeBot ? activeBot.depth : 2;
-                var bestValue = Infinity; // Engine is Black, looking to minimize score
+                var bestValue = Infinity; 
                 var moveCandidates = [];
 
                 for (var i = 0; i < moves.length; i++) {
@@ -924,7 +1110,7 @@
         function greySquare(square) { $('#my-board .square-' + square).addClass('legal-move-marker'); }
 
         function onDragStart(source, piece) {
-            if (game.game_over()) return false;
+            if (game.game_over() || isReviewModeActive) return false;
             if (!isLocalFriendMode && game.turn() === 'b') return false;
 
             var moves = game.moves({ square: source, verbose: true });
@@ -933,6 +1119,7 @@
         }
 
         function onDrop(source, target) {
+            if (isReviewModeActive) return 'snapback';
             removeGreyCircles();
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
