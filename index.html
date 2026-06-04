@@ -494,8 +494,10 @@
         var selectedTimerConfig = "Untimed";
         var timerDurationSeconds = 0;
         
-        var whiteTimeLeft = 0;
-        var blackTimeLeft = 0;
+        // High-Precision Engine States (Stored as Milliseconds)
+        var whiteMsLeft = 0;
+        var blackMsLeft = 0;
+        var lastTurnSwitchTimestamp = null;
         var clockIntervalTracker = null;
 
         var currentUserSession = {
@@ -550,12 +552,7 @@
             }).join(''));
 
             const googleUserData = JSON.parse(jsonPayload);
-            
-            var fullGoogleName = googleUserData.name;
-            var googleProfilePic = googleUserData.picture;
-
-            document.getElementById('auth-modal').style.display = 'none';
-            executeNativeLogin(fullGoogleName, `<img src="${googleProfilePic}">`);
+            executeNativeLogin(googleUserData.name, `<img src="${googleUserData.picture}">`);
         }
 
         function initGoogleIdentityAuth() {
@@ -575,19 +572,12 @@
             document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
             document.getElementById(screenId).style.display = 'flex';
             if (screenId === 'game-screen' && board) {
-                window.setTimeout(function() {
-                    board.resize();
-                }, 100);
+                window.setTimeout(function() { board.resize(); }, 100);
             }
         }
 
         function openAuthModal(mode) { 
-            const titleEl = document.getElementById('auth-title');
-            if (mode === 'login') {
-                titleEl.innerText = "Welcome back";
-            } else {
-                titleEl.innerText = "Make a account";
-            }
+            document.getElementById('auth-title').innerText = mode === 'login' ? "Welcome back" : "Make an account";
             document.getElementById('auth-modal').style.display = 'flex';
             initGoogleIdentityAuth(); 
         }
@@ -595,8 +585,7 @@
         function closeAuthModal(e) { document.getElementById('auth-modal').style.display = 'none'; }
 
         function handleNativeAuthSubmission() {
-            var typedUsername = document.getElementById('auth-username').value.trim();
-            if(!typedUsername) typedUsername = "Guest Master";
+            var typedUsername = document.getElementById('auth-username').value.trim() || "Guest Master";
             document.getElementById('auth-modal').style.display = 'none';
             executeNativeLogin(typedUsername, '🦊');
         }
@@ -661,16 +650,18 @@
             switchScreen('home-screen');
         }
 
-        function formatTimeDigits(totalSecs) {
-            if (totalSecs <= 0) return "00:00";
+        function formatTimeDigits(totalMs) {
+            if (totalMs <= 0) return "00:00";
+            var totalSecs = Math.ceil(totalMs / 1000);
             var mins = Math.floor(totalSecs / 60);
             var secs = totalSecs % 60;
             return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
         }
 
-        // Helper to instantly refresh visual status signals
-        function refreshVisualActiveTurns() {
-            if (timerDurationSeconds === 0) return;
+        function updateClockVisualDisplays() {
+            document.getElementById('clock-white').innerText = formatTimeDigits(whiteMsLeft);
+            document.getElementById('clock-black').innerText = formatTimeDigits(blackMsLeft);
+
             if (game.turn() === 'w') {
                 document.getElementById('timer-w-card').classList.add('active-turn');
                 document.getElementById('timer-b-card').classList.remove('active-turn');
@@ -680,6 +671,29 @@
             }
         }
 
+        // Millisecond precision delta tracking function
+        function switchClockTurns() {
+            if (timerDurationSeconds === 0) return;
+            
+            var now = Date.now();
+            if (lastTurnSwitchTimestamp !== null) {
+                var elapsedMs = now - lastTurnSwitchTimestamp;
+                
+                // Deduct from whoever JUST completed their turn
+                if (game.turn() === 'b') { 
+                    // It is now Black's turn, which means White just moved! Deduct from White.
+                    whiteMsLeft -= elapsedMs;
+                    if (whiteMsLeft <= 0) { whiteMsLeft = 0; flagOutEndGame('Black'); }
+                } else {
+                    // It is now White's turn, which means Black just moved! Deduct from Black.
+                    blackMsLeft -= elapsedMs;
+                    if (blackMsLeft <= 0) { blackMsLeft = 0; flagOutEndGame('White'); }
+                }
+            }
+            lastTurnSwitchTimestamp = now;
+            updateClockVisualDisplays();
+        }
+
         function startClockCountingLogic() {
             clearInterval(clockIntervalTracker);
             if (timerDurationSeconds === 0) {
@@ -687,27 +701,32 @@
                 return;
             }
             document.getElementById('clocks-container').style.display = 'flex';
-            refreshVisualActiveTurns();
             
+            lastTurnSwitchTimestamp = Date.now();
+            updateClockVisualDisplays();
+            
+            // Background polling loop triggers 10 times a second to keep visual updates highly responsive
             clockIntervalTracker = setInterval(function() {
                 if (game.game_over()) { clearInterval(clockIntervalTracker); return; }
                 
+                var now = Date.now();
+                var elapsedMs = now - lastTurnSwitchTimestamp;
+                lastTurnSwitchTimestamp = now;
+
                 if (game.turn() === 'w') {
-                    whiteTimeLeft--;
-                    document.getElementById('clock-white').innerText = formatTimeDigits(whiteTimeLeft);
-                    refreshVisualActiveTurns();
-                    if (whiteTimeLeft <= 0) { flagOutEndGame('Black'); }
+                    whiteMsLeft -= elapsedMs;
+                    if (whiteMsLeft <= 0) { whiteMsLeft = 0; clearInterval(clockIntervalTracker); flagOutEndGame('Black'); }
                 } else {
-                    blackTimeLeft--;
-                    document.getElementById('clock-black').innerText = formatTimeDigits(blackTimeLeft);
-                    refreshVisualActiveTurns();
-                    if (blackTimeLeft <= 0) { flagOutEndGame('White'); }
+                    blackMsLeft -= elapsedMs;
+                    if (blackMsLeft <= 0) { blackMsLeft = 0; clearInterval(clockIntervalTracker); flagOutEndGame('White'); }
                 }
-            }, 1000);
+                updateClockVisualDisplays();
+            }, 100);
         }
 
         function flagOutEndGame(winnerColor) {
             clearInterval(clockIntervalTracker);
+            updateClockVisualDisplays();
             document.getElementById('status').innerText = `Game Over - ${winnerColor} wins on time!`;
             compileGameSummary();
         }
@@ -719,8 +738,7 @@
                     var piece = boardState[i][j];
                     if (piece) {
                         var values = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 200 };
-                        var val = values[piece.type];
-                        score += (piece.color === 'w' ? val : -val);
+                        score += (piece.color === 'w' ? values[piece.type] : -values[piece.type]);
                     }
                 }
             }
@@ -729,34 +747,23 @@
 
         function updateWinLossPredictionBar() {
             var score = evaluateBoard(game.board());
-            var displayScore = (score >= 0 ? "+" : "") + score.toFixed(1);
-            document.getElementById('eval-numerical').innerText = displayScore;
+            document.getElementById('eval-numerical').innerText = (score >= 0 ? "+" : "") + score.toFixed(1);
 
-            var whitePercent = 50 + (score * 4); 
-            whitePercent = Math.min(95, Math.max(5, whitePercent));
+            var whitePercent = Math.min(95, Math.max(5, 50 + (score * 4)));
             document.getElementById('eval-bar-white').style.width = whitePercent + "%";
-
-            if (score > 1.5) {
-                document.getElementById('eval-label').innerText = "Winning Prediction: White Advantage";
-            } else if (score < -1.5) {
-                document.getElementById('eval-label').innerText = "Winning Prediction: Black Advantage";
-            } else {
-                document.getElementById('eval-label').innerText = "Winning Prediction: Even Match";
-            }
+            document.getElementById('eval-label').innerText = Math.abs(score) > 1.5 ? 
+                `Winning Prediction: ${score > 0 ? 'White' : 'Black'} Advantage` : "Winning Prediction: Even Match";
         }
 
         function updateStatusAndLog() {
             updateWinLossPredictionBar();
-            refreshVisualActiveTurns(); // Instantly update styles on turn modifications
-            var statusText = "";
+            var statusText = game.game_over() ? "Match Complete!" : (game.turn() === 'w' ? "White to move" : "Black to move");
+            document.getElementById('status').innerHTML = statusText;
+
             if (game.game_over()) {
-                statusText = "Match Complete!";
                 clearInterval(clockIntervalTracker);
                 setTimeout(compileGameSummary, 600);
-            } else {
-                statusText = game.turn() === 'w' ? "White to move" : "Black to move";
             }
-            document.getElementById('status').innerHTML = statusText;
 
             var history = game.history();
             var html = "";
@@ -780,9 +787,10 @@
         function makeBotMove() {
             if (game.game_over()) return;
             var moves = game.moves();
-            var move = moves[Math.floor(Math.random() * moves.length)];
-            game.move(move);
+            game.move(moves[Math.floor(Math.random() * moves.length)]);
             board.position(game.fen());
+            
+            switchClockTurns(); // Handle timestamp adjustment immediately when bot drops its piece
             updateStatusAndLog();
         }
 
@@ -803,19 +811,18 @@
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
+            switchClockTurns(); // Calculate precise elapsed milliseconds immediately
             updateStatusAndLog();
+            
             if (!isLocalFriendMode) { 
-                // Immediate interface switch to the bot's perspective
-                refreshVisualActiveTurns();
                 window.setTimeout(makeBotMove, 300); 
             }
         }
 
         function resetGame() {
-            whiteTimeLeft = timerDurationSeconds;
-            blackTimeLeft = timerDurationSeconds;
-            document.getElementById('clock-white').innerText = formatTimeDigits(whiteTimeLeft);
-            document.getElementById('clock-black').innerText = formatTimeDigits(blackTimeLeft);
+            whiteMsLeft = timerDurationSeconds * 1000;
+            blackMsLeft = timerDurationSeconds * 1000;
+            lastTurnSwitchTimestamp = null;
             
             game.reset();
             board.start();
@@ -825,14 +832,14 @@
         }
 
         window.onload = function() {
-            var boardConfig = {
+            board = Chessboard('my-board', {
                 position: 'start',
                 draggable: true,
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
                 onDragStart: onDragStart,
                 onDrop: onDrop,
                 onSnapbackEnd: removeGreyCircles
-            };
+            });
 
             showcaseBoard = Chessboard('showcase-board', {
                 position: 'start',
@@ -840,9 +847,7 @@
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
 
-            board = Chessboard('my-board', boardConfig);
             initVerticalLobby();
-            
             window.setTimeout(function() {
                 showcaseBoard.resize();
                 board.resize();
