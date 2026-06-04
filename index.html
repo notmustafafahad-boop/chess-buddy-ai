@@ -507,41 +507,108 @@
             avatar: "🦊"
         };
 
+        // Core piece value map used for search metrics
+        const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+
+        // Positional square evaluation matrix to provide strategic positioning values
+        const POSITION_WEIGHTS = {
+            p: [
+                [0,  0,  0,  0,  0,  0,  0,  0],
+                [50, 50, 50, 50, 50, 50, 50, 50],
+                [10, 10, 20, 30, 30, 20, 10, 10],
+                [5,  5, 10, 25, 25, 10,  5,  5],
+                [0,  0,  0, 20, 20,  0,  0,  0],
+                [5, -5,-10,  0,  0,-10, -5,  5],
+                [5, 10, 10,-20,-20, 10, 10,  5],
+                [0,  0,  0,  0,  0,  0,  0,  0]
+            ],
+            n: [
+                [-50,-40,-30,-30,-30,-30,-40,-50],
+                [-40,-20,  0,  0,  0,  0,-20,-40],
+                [-30,  0, 10, 15, 15, 10,  0,-30],
+                [-30,  5, 15, 20, 20, 15,  5,-30],
+                [-30,  0, 15, 20, 20, 15,  0,-30],
+                [-30,  5, 10, 15, 15, 10,  5,-30],
+                [-40,-20,  0,  5,  5,  0,-20,-40],
+                [-50,-40,-30,-30,-30,-30,-40,-50]
+            ],
+            b: [
+                [-20,-10,-10,-10,-10,-10,-10,-20],
+                [-10,  0,  0,  0,  0,  0,  0,-10],
+                [-10,  0,  5, 10, 10,  5,  0,-10],
+                [-10,  5,  5, 10, 10,  5,  5,-10],
+                [-10,  0, 10, 10, 10, 10,  0,-10],
+                [-10, 10, 10, 10, 10, 10, 10,-10],
+                [-10,  5,  0,  0,  0,  0,  5,-10],
+                [-20,-10,-10,-10,-10,-10,-10,-20]
+            ],
+            r: [
+                [0,  0,  0,  0,  0,  0,  0,  0],
+                [5, 10, 10, 10, 10, 10, 10,  5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [0,  0,  0,  5,  5,  0,  0,  0]
+            ],
+            q: [
+                [-20,-10,-10, -5, -5,-10,-10,-20],
+                [-10,  0,  0,  0,  0,  0,  0,-10],
+                [-10,  0,  5,  5,  5,  5,  0,-10],
+                [-5,  0,  5,  5,  5,  5,  0, -5],
+                [0,  0,  5,  5,  5,  5,  0, -5],
+                [-10,  5,  5,  5,  5,  5,  0,-10],
+                [-10,  0,  5,  0,  0,  0,  0,-10],
+                [-20,-10,-10, -5, -5,-10,-10,-20]
+            ],
+            k: [
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-20,-30,-30,-40,-40,-30,-30,-20],
+                [-10,-20,-20,-20,-20,-20,-20,-10],
+                [20, 20,  0,  0,  0,  0, 20, 20],
+                [20, 30, 10,  0,  0, 10, 30, 20]
+            ]
+        };
+
         const botDatabase = {
             beginner: [
-                { id: "b1", name: "Toddler Timmy", elo: 250, avatar: "👶", desc: "Plays instantly, gets distracted easily.", blunderChance: 0.40 },
-                { id: "b2", name: "Whiskers Kitty", elo: 380, avatar: "🐱", desc: "Likes swatting at pieces randomly.", blunderChance: 0.30 },
-                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned how the pieces move yesterday.", blunderChance: 0.25 },
-                { id: "b4", name: "Checkmate Chuck", elo: 620, avatar: "👦", desc: "Tries to look for scholar's mate every game.", blunderChance: 0.20 },
-                { id: "b5", name: "Coffeehouse Cody", elo: 750, avatar: "☕", desc: "Plays rapid random attacks without thinking.", blunderChance: 0.15 }
+                { id: "b1", name: "Toddler Timmy", elo: 250, avatar: "👶", desc: "Plays instantly, gets distracted easily.", searchDepth: 1, blunderChance: 0.70, positionalWeight: 0.1 },
+                { id: "b2", name: "Whiskers Kitty", elo: 380, avatar: "🐱", desc: "Likes swatting at pieces randomly.", searchDepth: 1, blunderChance: 0.55, positionalWeight: 0.2 },
+                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned how the pieces move yesterday.", searchDepth: 1, blunderChance: 0.40, positionalWeight: 0.3 },
+                { id: "b4", name: "Checkmate Chuck", elo: 620, avatar: "👦", desc: "Tries to look for scholar's mate every game.", searchDepth: 2, blunderChance: 0.30, positionalWeight: 0.4 },
+                { id: "b5", name: "Coffeehouse Cody", elo: 750, avatar: "☕", desc: "Plays rapid random attacks without thinking.", searchDepth: 2, blunderChance: 0.22, positionalWeight: 0.5 }
             ],
             intermediate: [
-                { id: "i1", name: "Casual Carl", elo: 850, avatar: "🧠", desc: "Plays balanced, basic standard club chess.", blunderChance: 0.12 },
-                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent tactical vision, occasionally blunders.", blunderChance: 0.09 },
-                { id: "i3", name: "Professor Penny", elo: 1150, avatar: "👓", desc: "Very safe developer but misses deep forks.", blunderChance: 0.07 },
-                { id: "i4", name: "Tactical Toby", elo: 1300, avatar: "🏹", desc: "Enjoys sacrificing minor pieces for space.", blunderChance: 0.05 },
-                { id: "i5", name: "Solid Sophia", elo: 1450, avatar: "🛡️", desc: "Extremely defensive style, waits for your errors.", blunderChance: 0.03 }
+                { id: "i1", name: "Casual Carl", elo: 850, avatar: "🧠", desc: "Plays balanced, basic standard club chess.", searchDepth: 2, blunderChance: 0.15, positionalWeight: 0.7 },
+                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent tactical vision, occasionally blunders.", searchDepth: 2, blunderChance: 0.10, positionalWeight: 0.8 },
+                { id: "i3", name: "Professor Penny", elo: 1150, avatar: "👓", desc: "Very safe developer but misses deep forks.", searchDepth: 3, blunderChance: 0.07, positionalWeight: 0.9 },
+                { id: "i4", name: "Tactical Toby", elo: 1300, avatar: "🏹", desc: "Enjoys sacrificing minor pieces for space.", searchDepth: 3, blunderChance: 0.05, positionalWeight: 1.0 },
+                { id: "i5", name: "Solid Sophia", elo: 1450, avatar: "🛡️", desc: "Extremely defensive style, waits for your errors.", searchDepth: 3, blunderChance: 0.03, positionalWeight: 1.1 }
             ],
             expert: [
-                { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting advanced minor pieces.", blunderChance: 0.02 },
-                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for highly aesthetic mating webs.", blunderChance: 0.01 },
-                { id: "e3", name: "Positional Piper", elo: 1900, avatar: "🪈", desc: "Master of squeezing your pawn structures out.", blunderChance: 0.01 },
-                { id: "e4", name: "Endgame Ethan", elo: 2050, avatar: "⏳", desc: "Swaps off heavy items to win simple endgames.", blunderChance: 0.00 },
-                { id: "e5", name: "Calculated Chloe", elo: 2150, avatar: "📊", desc: "Deep brute-force checker of structural lines.", blunderChance: 0.00 }
+                { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting advanced minor pieces.", searchDepth: 3, blunderChance: 0.01, positionalWeight: 1.2 },
+                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for highly aesthetic mating webs.", searchDepth: 3, blunderChance: 0.00, positionalWeight: 1.3 },
+                { id: "e3", name: "Positional Piper", elo: 1900, avatar: "🪈", desc: "Master of squeezing your pawn structures out.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.4 },
+                { id: "e4", name: "Endgame Ethan", elo: 2050, avatar: "⏳", desc: "Swaps off heavy items to win simple endgames.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.5 },
+                { id: "e5", name: "Calculated Chloe", elo: 2150, avatar: "📊", desc: "Deep brute-force checker of structural lines.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.6 }
             ],
             gm: [
-                { id: "g1", name: "King Maker", elo: 2250, avatar: "👑", desc: "Exquisite control over open files.", blunderChance: 0.00 },
-                { id: "g2", name: "Oracle Owen", elo: 2380, avatar: "🔮", desc: "Foresees positional damage 8 moves away.", blunderChance: 0.00 },
-                { id: "g3", name: "Blizzard Boris", elo: 2500, avatar: "❄️", desc: "Cold, uncompromising tactical execution.", blunderChance: 0.00 },
-                { id: "g4", name: "Valkyrie Victoria", elo: 2620, avatar: "⚔️", desc: "Fierce attacks on opposite side castling layouts.", blunderChance: 0.00 },
-                { id: "g5", name: "Grandmaster Garry", elo: 2750, avatar: "🎖️", desc: "Legendary opening prep specialist.", blunderChance: 0.00 }
+                { id: "g1", name: "King Maker", elo: 2250, avatar: "👑", desc: "Exquisite control over open files.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.7 },
+                { id: "g2", name: "Oracle Owen", elo: 2380, avatar: "🔮", desc: "Foresees positional damage 8 moves away.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.8 },
+                { id: "g3", name: "Blizzard Boris", elo: 2500, avatar: "❄️", desc: "Cold, uncompromising tactical execution.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.9 },
+                { id: "g4", name: "Valkyrie Victoria", elo: 2620, avatar: "⚔️", desc: "Fierce attacks on opposite side castling layouts.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.0 },
+                { id: "g5", name: "Grandmaster Garry", elo: 2750, avatar: "🎖️", desc: "Legendary opening prep specialist.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.1 }
             ],
             supergm: [
-                { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", blunderChance: 0.00 },
-                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", blunderChance: 0.00 },
-                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", blunderChance: 0.00 },
-                { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot logically conceptualize.", blunderChance: 0.00 },
-                { id: "s5", name: "Chess Buddy Overlord", elo: 3450, avatar: "👽", desc: "Flawless mathematical perfection.", blunderChance: 0.00 }
+                { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.2 },
+                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.4 },
+                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.5 },
+                { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot logically conceptualize.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.7 },
+                { id: "s5", name: "Chess Buddy Overlord", elo: 3450, avatar: "👽", desc: "Flawless mathematical perfection.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 3.0 }
             ]
         };
 
@@ -708,14 +775,25 @@
             compileGameSummary();
         }
 
-        function evaluateBoard(boardState) {
+        // Positional evaluator used to score FEN configurations
+        function evaluateBoard(boardState, posWeightFactor = 1.0) {
             var score = 0;
-            for (var i=0; i<8; i++) {
-                for (var j=0; j<8; j++) {
+            for (var i = 0; i < 8; i++) {
+                for (var j = 0; j < 8; j++) {
                     var piece = boardState[i][j];
                     if (piece) {
-                        var values = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 200 };
-                        score += (piece.color === 'w' ? values[piece.type] : -values[piece.type]);
+                        var baseVal = PIECE_VALUES[piece.type];
+                        
+                        // Apply positional matrices if available
+                        var pWeight = 0;
+                        if (POSITION_WEIGHTS[piece.type]) {
+                            // Flip the board row coordinate index layout for black pieces
+                            var row = (piece.color === 'w') ? (7 - i) : i;
+                            pWeight = POSITION_WEIGHTS[piece.type][row][j] * posWeightFactor;
+                        }
+
+                        var squareValue = baseVal + pWeight;
+                        score += (piece.color === 'w' ? squareValue : -squareValue);
                     }
                 }
             }
@@ -723,13 +801,13 @@
         }
 
         function updateWinLossPredictionBar() {
-            var score = evaluateBoard(game.board());
-            document.getElementById('eval-numerical').innerText = (score >= 0 ? "+" : "") + score.toFixed(1);
+            var rawScore = evaluateBoard(game.board(), 1.0) / 100.0;
+            document.getElementById('eval-numerical').innerText = (rawScore >= 0 ? "+" : "") + rawScore.toFixed(1);
 
-            var whitePercent = Math.min(95, Math.max(5, 50 + (score * 4)));
+            var whitePercent = Math.min(95, Math.max(5, 50 + (rawScore * 4)));
             document.getElementById('eval-bar-white').style.width = whitePercent + "%";
-            document.getElementById('eval-label').innerText = Math.abs(score) > 1.5 ? 
-                `Winning Prediction: ${score > 0 ? 'White' : 'Black'} Advantage` : "Winning Prediction: Even Match";
+            document.getElementById('eval-label').innerText = Math.abs(rawScore) > 1.5 ? 
+                `Winning Prediction: ${rawScore > 0 ? 'White' : 'Black'} Advantage` : "Winning Prediction: Even Match";
         }
 
         function updateStatusAndLog() {
@@ -766,20 +844,111 @@
             quitActiveMatch();
         }
 
+        /**
+         * Minimax search with Alpha-Beta pruning to provide ELO scaling.
+         */
+        function minimaxSearch(depth, isMaximizing, alpha, beta, posFactor) {
+            if (depth === 0 || game.game_over()) {
+                return evaluateBoard(game.board(), posFactor);
+            }
+
+            var moves = game.moves();
+            if (isMaximizing) {
+                var maxEval = -Infinity;
+                for (var i = 0; i < moves.length; i++) {
+                    game.move(moves[i]);
+                    var evaluation = minimaxSearch(depth - 1, false, alpha, beta, posFactor);
+                    game.undo();
+                    maxEval = Math.max(maxEval, evaluation);
+                    alpha = Math.max(alpha, evaluation);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                var minEval = Infinity;
+                for (var i = 0; i < moves.length; i++) {
+                    game.move(moves[i]);
+                    var evaluation = minimaxSearch(depth - 1, true, alpha, beta, posFactor);
+                    game.undo();
+                    minEval = Math.min(minEval, evaluation);
+                    beta = Math.min(beta, evaluation);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        /**
+         * Evaluates legal variants, selects an action based on Bot parameters,
+         * and applies blunder parameters dynamically.
+         */
+        function computeAdaptiveBotMove() {
+            if (game.game_over()) return null;
+
+            var legalMoves = game.moves();
+            if (legalMoves.length === 0) return null;
+
+            // Trigger artificial oversight if blunder check triggers
+            if (Math.random() < activeBot.blunderChance) {
+                // Find hanging pieces or choose a random move for lower-rated bots
+                var poorMoves = [];
+                for (var i = 0; i < legalMoves.length; i++) {
+                    game.move(legalMoves[i]);
+                    if (!game.in_check()) {
+                        poorMoves.push(legalMoves[i]);
+                    }
+                    game.undo();
+                }
+                if (poorMoves.length > 0) {
+                    return poorMoves[Math.floor(Math.random() * poorMoves.length)];
+                }
+                return legalMoves[Math.floor(Math.random() * legalMoves.length)];
+            }
+
+            // Execute alpha-beta pruned minimax calculations
+            var optimalMove = null;
+            var playerIsWhite = (game.turn() === 'w');
+            var bestScore = playerIsWhite ? -Infinity : Infinity;
+
+            // Shuffle moves to add variability between positions with identical scores
+            legalMoves.sort(() => 0.5 - Math.random());
+
+            for (var i = 0; i < legalMoves.length; i++) {
+                var action = legalMoves[i];
+                game.move(action);
+                
+                // Deep scan matching the current bot's search depth configuration
+                var currentEval = minimaxSearch(activeBot.searchDepth - 1, !playerIsWhite, -Infinity, Infinity, activeBot.positionalWeight);
+                game.undo();
+
+                if (playerIsWhite) {
+                    if (currentEval > bestScore) {
+                        bestScore = currentEval;
+                        optimalMove = action;
+                    }
+                } else {
+                    if (currentEval < bestScore) {
+                        bestScore = currentEval;
+                        optimalMove = action;
+                    }
+                }
+            }
+
+            // Fallback safety filter
+            return optimalMove || legalMoves[0];
+        }
+
         function makeBotMove() {
             if (game.game_over()) {
                 isBotThinking = false;
                 return;
             }
             
-            var moves = game.moves();
-            if (moves.length === 0) {
-                isBotThinking = false;
-                return;
+            var chosenMove = computeAdaptiveBotMove();
+            if (chosenMove) {
+                game.move(chosenMove);
+                board.position(game.fen());
             }
-            
-            game.move(moves[Math.floor(Math.random() * moves.length)]);
-            board.position(game.fen());
             
             isBotThinking = false;
             
