@@ -775,6 +775,7 @@
             
             document.getElementById('status').innerHTML = statusText;
 
+            // REBUILT MOVELOG PARSER: Forces update directly bypassing asset-load pipelines
             var history = game.history();
             var html = "";
             for (var i = 0; i < history.length; i += 2) {
@@ -789,6 +790,7 @@
             var scrollContainer = document.getElementById('move-history');
             scrollContainer.scrollTop = scrollContainer.scrollHeight;
 
+            // IMMEDIATE GAME OVER POPUP HOOK
             if (game.game_over()) {
                 clearInterval(clockIntervalTracker);
                 compileGameSummary();
