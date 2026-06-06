@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Buddy AI - Premium Interactive Grid</title>
     
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Initialize Supabase
+        const supabase = supabase.createClient(
+            'https://vfdkkawjlvqopibeydws.supabase.co', 
+            'sb_publishable_XBhznaGk-YxT3Xg6XgNFxw_fe-JrWdK'
+        );
+    </script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     
     <style>
@@ -472,6 +481,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     
     <script>
+        // --- SUPABASE CLOUD SAVE ---
+        async function saveGameToCloud(pgnData) {
+            const { data, error } = await supabase
+                .from('games')
+                .insert([{ pgn: pgnData, result: 'finished' }]);
+            
+            if (error) {
+                console.error("Supabase Save Error:", error.message);
+            } else {
+                console.log("Match data synced to cloud.");
+            }
+        }
+
         var game = new Chess();
         var board = null;
         var showcaseBoard = null;
@@ -802,6 +824,9 @@
             document.getElementById('accuracy-val').innerText = calculatedAccuracy + "%";
             document.getElementById('elo-val').innerText = isLocalFriendMode ? "Unrated" : "Unchanged";
             document.getElementById('gameover-modal').style.display = 'flex';
+            
+            // --- SYNC TO SUPABASE ---
+            saveGameToCloud(game.pgn());
         }
 
         function closeModalAndExit() {
