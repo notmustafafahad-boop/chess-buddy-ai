@@ -12,6 +12,20 @@
             'https://vfdkkawjlvqopibeydws.supabase.co', 
             'sb_publishable_XBhznaGk-YxT3Xg6XgNFxw_fe-JrWdK'
         );
+
+        // --- ADDED GOOGLE AUTH LOGIC ---
+        async function signInWithGoogle() {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin }
+            });
+            if (error) console.error("Google Auth Error:", error.message);
+        }
+
+        async function triggerLogout() {
+            await supabase.auth.signOut();
+            window.location.reload();
+        }
     </script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
@@ -332,7 +346,7 @@
         <div class="nav-auth-buttons">
             <div id="logged-out-view" style="display: flex; gap: 12px;">
                 <button class="btn-nav" onclick="openAuthModal('login')">Log In</button>
-                <button class="btn-nav primary" onclick="openAuthModal('signup')">Sign Up</button>
+                <button class="btn-nav primary" onclick="signInWithGoogle()">Login with Google</button>
             </div>
             <div id="logged-in-view" class="user-profile-badge">
                 <span id="user-avatar-container" class="user-avatar">🦊</span>
@@ -481,6 +495,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     
     <script>
+        // --- AUTH SESSION CHECK ---
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                document.getElementById('logged-out-view').style.display = 'none';
+                document.getElementById('logged-in-view').style.display = 'flex';
+                document.getElementById('profile-display-name').innerText = session.user.email;
+            }
+        });
+
         // --- SUPABASE CLOUD SAVE ---
         async function saveGameToCloud(pgnData) {
             const { data, error } = await supabase
@@ -646,12 +669,6 @@
             document.getElementById('profile-display-elo').innerText = currentUserSession.displayElo;
             document.getElementById('logged-out-view').style.display = 'none';
             document.getElementById('logged-in-view').style.display = 'flex';
-        }
-
-        function triggerLogout() {
-            currentUserSession = null;
-            document.getElementById('logged-in-view').style.display = 'none';
-            document.getElementById('logged-out-view').style.display = 'flex';
         }
 
         function initVerticalLobby() {
@@ -825,7 +842,6 @@
             document.getElementById('elo-val').innerText = isLocalFriendMode ? "Unrated" : "Unchanged";
             document.getElementById('gameover-modal').style.display = 'flex';
             
-            // --- SYNC TO SUPABASE ---
             saveGameToCloud(game.pgn());
         }
 
