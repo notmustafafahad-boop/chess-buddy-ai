@@ -13,7 +13,7 @@
             'sb_publishable_XBhznaGk-YxT3Xg6XgNFxw_fe-JrWdK'
         );
 
-        // --- ADDED GOOGLE AUTH LOGIC ---
+        // --- GOOGLE AUTH LOGIC ---
         async function signInWithGoogle() {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
@@ -346,7 +346,7 @@
         <div class="nav-auth-buttons">
             <div id="logged-out-view" style="display: flex; gap: 12px;">
                 <button class="btn-nav" onclick="openAuthModal('login')">Log In</button>
-                <button class="btn-nav primary" onclick="signInWithGoogle()">Login with Google</button>
+                <button class="btn-nav primary" onclick="openAuthModal('signup')">Sign Up</button>
             </div>
             <div id="logged-in-view" class="user-profile-badge">
                 <span id="user-avatar-container" class="user-avatar">🦊</span>
@@ -454,11 +454,23 @@
     <div class="modal-overlay" id="auth-modal" onclick="closeAuthModal(event)">
         <div class="auth-card" onclick="event.stopPropagation()">
             <h2 id="auth-title" style="margin-top:0; color:var(--chess-green);">Welcome back</h2>
-            <p id="auth-subtitle" style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Synchronize profiles & performance history.</p>
+            <p id="auth-subtitle" style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Synchronize profiles & performance history.</p>
             
-            <input type="text" id="auth-username" class="auth-input" placeholder="Username" value="guest_grandmaster">
-            <input type="password" id="auth-password" class="auth-input" placeholder="Security Password" value="password123">
+            <input type="text" id="auth-username" class="auth-input" placeholder="Username" value="">
+            
+            <div id="signup-recommendation" style="display:none; justify-content:space-between; align-items:center; margin:-4px 0 12px 0; padding:0 4px;">
+                <span style="font-size:11px; color:var(--chess-green); font-weight:600;">✨ Suggested unique user</span>
+                <button type="button" style="background:transparent; border:none; color:#e67e22; cursor:pointer; font-size:11px; font-weight:bold; padding:0;" onclick="generateRecommendedUsername()">🎲 Roll Another</button>
+            </div>
+
+            <input type="password" id="auth-password" class="auth-input" placeholder="Security Password" value="">
             <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" onclick="handleNativeAuthSubmission()">Authenticate</button>
+            
+            <div class="divider">OR</div>
+            
+            <button class="secondary-cta" style="width:100%; padding:12px; font-size:14px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="signInWithGoogle()">
+                <span>🌐</span> Continue with Google
+            </button>
         </div>
     </div>
 
@@ -649,12 +661,43 @@
             }
         }
 
+        // --- UPDATED AUTH MODAL ROUTING & USER RECOMMENDATION ---
         function openAuthModal(mode) { 
-            document.getElementById('auth-title').innerText = mode === 'login' ? "Welcome back" : "Make an account";
+            const titleEl = document.getElementById('auth-title');
+            const subtitleEl = document.getElementById('auth-subtitle');
+            const recommendationEl = document.getElementById('signup-recommendation');
+            const userInp = document.getElementById('auth-username');
+            const passInp = document.getElementById('auth-password');
+
+            // Bugfix: Remove dangerous preset plain values across inputs
+            userInp.value = "";
+            passInp.value = "";
+
+            if (mode === 'signup') {
+                titleEl.innerText = "Create an Account";
+                subtitleEl.innerText = "Join the chess buddy ecosystem today.";
+                recommendationEl.style.display = 'flex';
+                generateRecommendedUsername(); // Inject custom user handle
+            } else {
+                titleEl.innerText = "Welcome back";
+                subtitleEl.innerText = "Synchronize profiles & performance history.";
+                recommendationEl.style.display = 'none';
+            }
             document.getElementById('auth-modal').style.display = 'flex';
         }
         
         function closeAuthModal(e) { document.getElementById('auth-modal').style.display = 'none'; }
+
+        function generateRecommendedUsername() {
+            const prefixBank = ["Pawn", "Knight", "Rook", "Bishop", "Queen", "King", "Gambit", "Checkmate", "Castle", "Tactician", "Grandmaster", "EnPassant"];
+            const suffixBank = ["Slayer", "Pro", "Rider", "Sniper", "Titan", "Wizard", "Chaser", "Stormer", "Overlord", "Boss", "Buddy"];
+            
+            const randomPrefix = prefixBank[Math.floor(Math.random() * prefixBank.length)];
+            const randomSuffix = suffixBank[Math.floor(Math.random() * suffixBank.length)];
+            const uniqueID = Math.floor(100 + Math.random() * 900); // 3 digit variance
+            
+            document.getElementById('auth-username').value = randomPrefix + randomSuffix + uniqueID;
+        }
 
         function handleNativeAuthSubmission() {
             var typedUsername = document.getElementById('auth-username').value.trim() || "Guest Master";
@@ -1015,10 +1058,12 @@
             });
 
             initVerticalLobby();
-            window.setTimeout(function() {
-                showcaseBoard.resize();
-                board.resize();
-            }, 150);
+            
+            // Bugfix: Cascading staggered timeouts + synthetic event dispatch ensures 
+            // the showcase board computes its aspect-ratio bounds perfectly on load.
+            window.setTimeout(function() { showcaseBoard.resize(); board.resize(); }, 50);
+            window.setTimeout(function() { showcaseBoard.resize(); board.resize(); window.dispatchEvent(new Event('resize')); }, 250);
+            window.setTimeout(function() { showcaseBoard.resize(); board.resize(); }, 600);
         };
     </script>
 </body>
