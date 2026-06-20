@@ -7,16 +7,30 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Initialize Supabase with your provided keys
-        const supabaseUrl = 'https://vfdkkawjlvqopibeydws.supabase.co';
-        const supabaseKey = 'sb_publishable_XBhznaGk-YxT3Xg6XgNFxw_fe-JrWdK';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // Initialize Supabase
+        const supabase = supabase.createClient(
+            'https://vfdkkawjlvqopibeydws.supabase.co', 
+            'sb_publishable_XBhznaGk-YxT3Xg6XgNFxw_fe-JrWdK'
+        );
+
+        // --- GOOGLE AUTH LOGIC ---
+        async function signInWithGoogle() {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin }
+            });
+            if (error) console.error("Google Auth Error:", error.message);
+        }
+
+        async function triggerLogout() {
+            await supabase.auth.signOut();
+            window.location.reload();
+        }
     </script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     
     <style>
-        /* --- CSS STYLES (Preserved from your original premium design) --- */
         :root {
             --chess-green: #81b64c;
             --chess-green-hover: #6a993c;
@@ -29,24 +43,48 @@
         }
 
         body {
-            background-color: var(--dark-bg); color: var(--text-main);
+            background-color: var(--dark-bg);
+            color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0; padding: 0; box-sizing: border-box; height: 100vh;
-            display: flex; flex-direction: column; overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
         }
 
         .navbar {
-            max-width: 1100px; width: 100%; display: flex; justify-content: space-between;
-            align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color);
-            box-sizing: border-box; margin: 0 auto; flex-shrink: 0;
+            max-width: 1100px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            box-sizing: border-box;
+            margin: 0 auto;
+            flex-shrink: 0;
         }
 
-        .logo-text { font-size: 22px; font-weight: 800; color: var(--chess-green); letter-spacing: 0.5px; }
+        .logo-text {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--chess-green);
+            letter-spacing: 0.5px;
+        }
+
         .nav-auth-buttons { display: flex; gap: 12px; align-items: center; }
 
         .user-profile-badge {
-            display: none; align-items: center; gap: 12px; background: var(--panel-bg);
-            border: 1px solid var(--border-color); padding: 6px 16px; border-radius: 30px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px 16px;
+            border-radius: 30px;
         }
         .user-avatar { font-size: 20px; border-radius: 50%; overflow: hidden; width: 24px; height: 24px; display: inline-block; background: #444; text-align: center; line-height: 24px; }
         .user-meta { text-align: left; }
@@ -54,22 +92,46 @@
         .user-stat { font-size: 11px; color: var(--chess-green); font-weight: bold; }
 
         .btn-nav {
-            background: transparent; color: var(--text-main); border: 1px solid #444;
-            padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600;
-            font-size: 14px; transition: all 0.2s;
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid #444;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
         }
         .btn-nav.primary { background: var(--chess-green); border-color: var(--chess-green); }
         .btn-nav:hover { border-color: var(--chess-green); transform: translateY(-1px); }
 
         .screen { 
-            display: none; width: 100%; max-width: 1100px; padding: 20px; 
-            box-sizing: border-box; flex-direction: column; align-items: center;
-            margin: 0 auto; flex-grow: 1;
+            display: none; 
+            width: 100%; 
+            max-width: 1100px; 
+            padding: 20px; 
+            box-sizing: border-box; 
+            flex-direction: column; 
+            align-items: center;
+            margin: 0 auto;
+            flex-grow: 1;
         }
         .screen.active { display: flex; }
 
-        #home-screen { justify-content: center; padding-bottom: 60px; }
-        .hero-section { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; align-items: center; text-align: left; width: 100%; }
+        #home-screen {
+            justify-content: center;
+            padding-bottom: 60px;
+        }
+
+        .hero-section {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 40px;
+            align-items: center;
+            text-align: left;
+            width: 100%;
+        }
+
         @media (max-width: 820px) {
             .hero-section { grid-template-columns: 1fr; text-align: center; }
             .hero-actions { justify-content: center; }
@@ -95,17 +157,55 @@
         }
         .secondary-cta:hover { background: #333; border-color: #555; transform: translateY(-2px); }
 
-        .hero-graphic { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; width: 100%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); box-sizing: border-box; }
+        .hero-graphic {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
 
-        #lobby-screen { justify-content: flex-start; overflow-y: auto; }
+        #lobby-screen {
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
         .lobby-container { width: 100%; display: flex; flex-direction: column; gap: 30px; }
         
-        .rank-section { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; width: 100%; box-sizing: border-box; text-align: left; }
-        .rank-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #2d2d2d; padding-bottom: 10px; }
-        .bot-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        .rank-section {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
 
-        .bot-card { background: var(--card-bg); border: 1px solid #2d2d2d; border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease; }
+        .rank-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #2d2d2d; padding-bottom: 10px; }
+        
+        .bot-grid { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            width: 100%;
+        }
+
+        .bot-card {
+            background: var(--card-bg);
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
         .bot-card:hover { border-color: var(--chess-green); background: #2c2c2c; transform: translateX(4px); }
+        
         .bot-identity-group { display: flex; align-items: center; gap: 20px; }
         .bot-avatar { font-size: 36px; line-height: 1; }
         .bot-meta-text { text-align: left; }
@@ -114,21 +214,80 @@
         .bot-elo-badge { background: rgba(129, 182, 76, 0.15); color: var(--chess-green); font-weight: 700; font-size: 14px; padding: 6px 16px; border-radius: 4px; border: 1px solid rgba(129, 182, 76, 0.3); }
 
         #game-screen { justify-content: flex-start; }
-        .app-layout { display: flex; flex-direction: row; gap: 30px; justify-content: center; align-items: flex-start; width: 100%; margin-top: 20px; }
+        .app-layout {
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
+            margin-top: 20px;
+        }
+
         .board-container { display: flex; flex-direction: column; gap: 15px; align-items: center; }
         
-        .panel { display: flex; justify-content: space-between; align-items: center; width: 450px; max-width: 90vw; background: var(--panel-bg); padding: 12px 20px; border-radius: 6px; border: 1px solid var(--border-color); box-sizing: border-box; }
-        #my-board { width: 450px; max-width: 90vw; box-shadow: 0 12px 36px rgba(0,0,0,0.6); border-radius: 6px; overflow: hidden; }
+        .panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 450px;
+            max-width: 90vw;
+            background: var(--panel-bg);
+            padding: 12px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
 
-        .game-clocks-wrapper { display: flex; width: 100%; gap: 15px; margin-bottom: 5px; }
-        .chess-timer-card { flex: 1; background: #252525; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; text-align: center; }
-        .chess-timer-card.active-turn { border-color: var(--chess-green); box-shadow: 0 0 8px rgba(129, 182, 76, 0.4); }
+        #my-board {
+            width: 450px;
+            max-width: 90vw;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .game-clocks-wrapper {
+            display: flex;
+            width: 100%;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+        .chess-timer-card {
+            flex: 1;
+            background: #252525;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .chess-timer-card.active-turn {
+            border-color: var(--chess-green);
+            box-shadow: 0 0 8px rgba(129, 182, 76, 0.4);
+        }
         .clock-lbl { font-size: 11px; text-transform: uppercase; color: #888; margin-bottom: 2px; }
         .clock-digits { font-size: 22px; font-weight: bold; font-family: monospace; color: #fff; }
 
-        .sidebar { width: 380px; height: 540px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; }
+        .sidebar {
+            width: 380px;
+            height: 540px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+
         .sidebar-header { background: #252525; padding: 14px; font-weight: 600; font-size: 14px; border-bottom: 1px solid var(--border-color); color: #e67e22; text-align: left; }
-        .eval-bar-container { background: #252525; padding: 10px 14px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 6px; }
+        
+        .eval-bar-container {
+            background: #252525;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
         .eval-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; }
         .eval-track { height: 10px; width: 100%; background: #000; border-radius: 5px; overflow: hidden; display: flex; }
         .eval-fill-white { width: 50%; background: #fff; transition: width 0.3s ease; }
@@ -139,11 +298,25 @@
         .move-number { color: #757575; }
 
         .legal-move-marker { position: relative; }
-        .legal-move-marker::after { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: rgba(0, 0, 0, 0.25); border-radius: 50%; z-index: 500; pointer-events: none; }
+        .legal-move-marker::after {
+            content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 20px; height: 20px; background: rgba(0, 0, 0, 0.25); border-radius: 50%; z-index: 500; pointer-events: none;
+        }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; }
-        .auth-card { background: var(--panel-bg); border: 1px solid #333; border-radius: 8px; width: 380px; max-width: 90vw; padding: 30px; box-sizing: border-box; text-align: center; }
-        .auth-input { width: 100%; padding: 12px; margin: 8px 0; background: #2b2b2b; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; outline: none; }
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center;
+        }
+        
+        .auth-card {
+            background: var(--panel-bg); border: 1px solid #333; border-radius: 8px;
+            width: 380px; max-width: 90vw; padding: 30px; box-sizing: border-box; text-align: center;
+        }
+
+        .auth-input {
+            width: 100%; padding: 12px; margin: 8px 0; background: #2b2b2b; border: 1px solid #444;
+            color: white; border-radius: 4px; box-sizing: border-box; outline: none;
+        }
         .auth-input:focus { border-color: var(--chess-green); }
 
         .divider { margin: 18px 0; color: #666; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
@@ -176,12 +349,12 @@
                 <button class="btn-nav primary" onclick="openAuthModal('signup')">Sign Up</button>
             </div>
             <div id="logged-in-view" class="user-profile-badge">
-                <span id="user-avatar-container" class="user-avatar">👤</span>
+                <span id="user-avatar-container" class="user-avatar">🦊</span>
                 <div class="user-meta">
-                    <div class="user-name" id="profile-display-name">Loading...</div>
-                    <div class="user-stat">Secured Session</div>
+                    <div class="user-name" id="profile-display-name">Guest Master</div>
+                    <div class="user-stat">Rating: <span id="profile-display-elo">500</span> ELO</div>
                 </div>
-                <button class="btn-nav" style="padding: 4px 10px; font-size: 11px; margin-left: 5px;" onclick="handleLogout()">Logout</button>
+                <button class="btn-nav" style="padding: 4px 10px; font-size: 11px; margin-left: 5px;" onclick="triggerLogout()">Logout</button>
             </div>
         </div>
     </div>
@@ -281,18 +454,21 @@
     <div class="modal-overlay" id="auth-modal" onclick="closeAuthModal(event)">
         <div class="auth-card" onclick="event.stopPropagation()">
             <h2 id="auth-title" style="margin-top:0; color:var(--chess-green);">Welcome back</h2>
-            <p id="auth-subtitle" style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Login to save your matches.</p>
+            <p id="auth-subtitle" style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Synchronize profiles & performance history.</p>
             
-            <p id="auth-error-msg" style="color: #ff6b6b; font-size: 13px; margin-bottom: 10px; display: none;"></p>
+            <input type="text" id="auth-username" class="auth-input" placeholder="Username" value="">
+            
+            <div id="signup-recommendation" style="display:none; justify-content:space-between; align-items:center; margin:-4px 0 12px 0; padding:0 4px;">
+                <span style="font-size:11px; color:var(--chess-green); font-weight:600;">✨ Suggested unique user</span>
+                <button type="button" style="background:transparent; border:none; color:#e67e22; cursor:pointer; font-size:11px; font-weight:bold; padding:0;" onclick="generateRecommendedUsername()">🎲 Roll Another</button>
+            </div>
 
-            <input type="email" id="auth-email" class="auth-input" placeholder="Email Address">
-            <input type="password" id="auth-password" class="auth-input" placeholder="Password (Min 6 chars)">
-            
-            <button class="main-cta" id="auth-submit-btn" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" onclick="submitNativeAuth()">Authenticate</button>
+            <input type="password" id="auth-password" class="auth-input" placeholder="Security Password" value="">
+            <button class="main-cta" style="width:100%; padding:12px; font-size:15px; margin-top:15px;" onclick="handleNativeAuthSubmission()">Authenticate</button>
             
             <div class="divider">OR</div>
             
-            <button class="secondary-cta" style="width:100%; padding:12px; font-size:14px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="handleGoogleLogin()">
+            <button class="secondary-cta" style="width:100%; padding:12px; font-size:14px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="signInWithGoogle()">
                 <span>🌐</span> Continue with Google
             </button>
         </div>
@@ -301,7 +477,7 @@
     <div class="modal-overlay" id="timer-modal">
         <div class="modal-card">
             <h2 style="margin-top:0; color:var(--chess-green);">Configure Match Timer</h2>
-            <p style="font-size:13px; color:var(--text-muted); margin-bottom:25px;">Select your preferred clock controls.</p>
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:25px;">Select your preferred clock controls for this match configuration.</p>
             <div style="display:flex; flex-direction:column; gap:12px;">
                 <button class="secondary-cta" style="width:100%; text-align:left; padding:14px 20px;" onclick="selectTimerMode('Untimed', 0)">⏱️ Casual (No Timer)</button>
                 <button class="secondary-cta" style="width:100%; text-align:left; padding:14px 20px;" onclick="selectTimerMode('Bullet (1 min)', 60)">🚀 Bullet (1 min)</button>
@@ -331,109 +507,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     
     <script>
-        /* =========================================
-           1. AUTHENTICATION & SUPABASE LOGIC
-           ========================================= */
-        let currentAuthMode = 'login'; // tracks if modal is login or signup
-
-        // Listen for user login/logout globally
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (session && session.user) {
+        // --- AUTH SESSION CHECK ---
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
                 document.getElementById('logged-out-view').style.display = 'none';
                 document.getElementById('logged-in-view').style.display = 'flex';
-                // Display user email (or Google name if available)
-                const displayName = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
-                document.getElementById('profile-display-name').innerText = displayName;
-            } else {
-                document.getElementById('logged-out-view').style.display = 'flex';
-                document.getElementById('logged-in-view').style.display = 'none';
+                document.getElementById('profile-display-name').innerText = session.user.email;
             }
         });
 
-        // Toggle the Auth Modal UI
-        function openAuthModal(mode) {
-            currentAuthMode = mode;
-            document.getElementById('auth-error-msg').style.display = 'none';
-            document.getElementById('auth-email').value = '';
-            document.getElementById('auth-password').value = '';
-
-            if (mode === 'signup') {
-                document.getElementById('auth-title').innerText = "Create an Account";
-                document.getElementById('auth-subtitle').innerText = "Join to track your ELO and matches.";
-                document.getElementById('auth-submit-btn').innerText = "Sign Up";
-            } else {
-                document.getElementById('auth-title').innerText = "Welcome Back";
-                document.getElementById('auth-subtitle').innerText = "Login to synchronize your history.";
-                document.getElementById('auth-submit-btn').innerText = "Log In";
-            }
-            document.getElementById('auth-modal').style.display = 'flex';
-        }
-
-        function closeAuthModal(e) { 
-            if(e) e.stopPropagation();
-            document.getElementById('auth-modal').style.display = 'none'; 
-        }
-
-        function displayAuthError(msg) {
-            const errorEl = document.getElementById('auth-error-msg');
-            errorEl.innerText = msg;
-            errorEl.style.display = 'block';
-        }
-
-        // Foolproof Native Auth Submission (Prevents empty or weak logic)
-        async function submitNativeAuth() {
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value;
-
-            if (!email) return displayAuthError("Email address is required.");
-            if (!password || password.length < 6) return displayAuthError("Password must be at least 6 characters.");
-
-            document.getElementById('auth-submit-btn').innerText = "Processing...";
-
-            let result;
-            if (currentAuthMode === 'signup') {
-                result = await supabase.auth.signUp({ email: email, password: password });
-            } else {
-                result = await supabase.auth.signInWithPassword({ email: email, password: password });
-            }
-
-            if (result.error) {
-                displayAuthError(result.error.message);
-                document.getElementById('auth-submit-btn').innerText = currentAuthMode === 'signup' ? "Sign Up" : "Log In";
-            } else {
-                closeAuthModal();
-                if (currentAuthMode === 'signup') alert("Account created! You are now logged in.");
-            }
-        }
-
-        // Real Google Login
-        async function handleGoogleLogin() {
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin }
-            });
-            if (error) alert("Google Auth Error: " + error.message);
-        }
-
-        // Real Logout
-        async function handleLogout() {
-            await supabase.auth.signOut();
-            window.location.reload(); // Refresh to ensure pure state
-        }
-
+        // --- SUPABASE CLOUD SAVE ---
         async function saveGameToCloud(pgnData) {
-            // Only try saving if logged in to prevent errors
-            const { data: { session } } = await supabase.auth.getSession();
-            if(!session) return; 
-
-            const { error } = await supabase.from('games').insert([{ pgn: pgnData, result: 'finished' }]);
-            if (error) console.error("Cloud Save Failed:", error.message);
+            const { data, error } = await supabase
+                .from('games')
+                .insert([{ pgn: pgnData, result: 'finished' }]);
+            
+            if (error) {
+                console.error("Supabase Save Error:", error.message);
+            } else {
+                console.log("Match data synced to cloud.");
+            }
         }
 
-
-        /* =========================================
-           2. GAME VARIABLES & BOT DATA
-           ========================================= */
         var game = new Chess();
         var board = null;
         var showcaseBoard = null;
@@ -448,69 +543,204 @@
         var lastTurnSwitchTimestamp = null;
         var clockIntervalTracker = null;
 
+        var currentUserSession = {
+            username: "guest_grandmaster",
+            displayElo: 500,
+            avatar: "🦊"
+        };
+
         const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-        // (Position weights simplified for code brevity - replace with your full array if needed)
-        const POSITION_WEIGHTS = { p: [[0,0,0,0,0,0,0,0],[50,50,50,50,50,50,50,50],[10,10,20,30,30,20,10,10],[5,5,10,25,25,10,5,5],[0,0,0,20,20,0,0,0],[5,-5,-10,0,0,-10,-5,5],[5,10,10,-20,-20,10,10,5],[0,0,0,0,0,0,0,0]], n: [[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,0,0,0,0,-20,-40],[-30,0,10,15,15,10,0,-30],[-30,5,15,20,20,15,5,-30],[-30,0,15,20,20,15,0,-30],[-30,5,10,15,15,10,5,-30],[-40,-20,0,5,5,0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]], b: [[-20,-10,-10,-10,-10,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,10,10,5,0,-10],[-10,5,5,10,10,5,5,-10],[-10,0,10,10,10,10,0,-10],[-10,10,10,10,10,10,10,-10],[-10,5,0,0,0,0,5,-10],[-20,-10,-10,-10,-10,-10,-10,-20]], r: [[0,0,0,0,0,0,0,0],[5,10,10,10,10,10,10,5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[0,0,0,5,5,0,0,0]], q: [[-20,-10,-10,-5,-5,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,5,5,5,0,-10],[-5,0,5,5,5,5,0,-5],[0,0,5,5,5,5,0,-5],[-10,5,5,5,5,5,0,-10],[-10,0,5,0,0,0,0,-10],[-20,-10,-10,-5,-5,-10,-10,-20]], k: [[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20,20,0,0,0,0,20,20],[20,30,10,0,0,10,30,20]] };
+
+        const POSITION_WEIGHTS = {
+            p: [
+                [0,  0,  0,  0,  0,  0,  0,  0],
+                [50, 50, 50, 50, 50, 50, 50, 50],
+                [10, 10, 20, 30, 30, 20, 10, 10],
+                [5,  5, 10, 25, 25, 10,  5,  5],
+                [0,  0,  0, 20, 20,  0,  0,  0],
+                [5, -5,-10,  0,  0,-10, -5,  5],
+                [5, 10, 10,-20,-20, 10, 10,  5],
+                [0,  0,  0,  0,  0,  0,  0,  0]
+            ],
+            n: [
+                [-50,-40,-30,-30,-30,-30,-40,-50],
+                [-40,-20,  0,  0,  0,  0,-20,-40],
+                [-30,  0, 10, 15, 15, 10,  0,-30],
+                [-30,  5, 15, 20, 20, 15,  5,-30],
+                [-30,  0, 15, 20, 20, 15,  0,-30],
+                [-30,  5, 10, 15, 15, 10,  5,-30],
+                [-40,-20,  0,  5,  5,  0,-20,-40],
+                [-50,-40,-30,-30,-30,-30,-40,-50]
+            ],
+            b: [
+                [-20,-10,-10,-10,-10,-10,-10,-20],
+                [-10,  0,  0,  0,  0,  0,  0,-10],
+                [-10,  0,  5, 10, 10,  5,  0,-10],
+                [-10,  5,  5, 10, 10,  5,  5,-10],
+                [-10,  0, 10, 10, 10, 10,  0,-10],
+                [-10, 10, 10, 10, 10, 10, 10,-10],
+                [-10,  5,  0,  0,  0,  0,  5,-10],
+                [-20,-10,-10,-10,-10,-10,-10,-20]
+            ],
+            r: [
+                [0,  0,  0,  0,  0,  0,  0,  0],
+                [5, 10, 10, 10, 10, 10, 10,  5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [-5,  0,  0,  0,  0,  0,  0, -5],
+                [0,  0,  0,  5,  5,  0,  0,  0]
+            ],
+            q: [
+                [-20,-10,-10, -5, -5,-10,-10,-20],
+                [-10,  0,  0,  0,  0,  0,  0,-10],
+                [-10,  0,  5,  5,  5,  5,  0,-10],
+                [-5,  0,  5,  5,  5,  5,  0, -5],
+                [0,  0,  5,  5,  5,  5,  0, -5],
+                [-10,  5,  5,  5,  5,  5,  0,-10],
+                [-10,  0,  5,  0,  0,  0,  0,-10],
+                [-20,-10,-10, -5, -5,-10,-10,-20]
+            ],
+            k: [
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-20,-30,-30,-40,-40,-30,-30,-20],
+                [-10,-20,-20,-20,-20,-20,-20,-10],
+                [20, 20,  0,  0,  0,  0, 20, 20],
+                [20, 30, 10,  0,  0, 10, 30, 20]
+            ]
+        };
 
         const botDatabase = {
             beginner: [
                 { id: "b1", name: "Toddler Timmy", elo: 250, avatar: "👶", desc: "Plays instantly, gets distracted easily.", searchDepth: 1, blunderChance: 0.65, positionalWeight: 0.1 },
                 { id: "b2", name: "Whiskers Kitty", elo: 380, avatar: "🐱", desc: "Likes swatting at pieces randomly.", searchDepth: 1, blunderChance: 0.50, positionalWeight: 0.2 },
-                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned how the pieces move yesterday.", searchDepth: 1, blunderChance: 0.35, positionalWeight: 0.3 }
+                { id: "b3", name: "Amateur Abby", elo: 500, avatar: "👧", desc: "Just learned how the pieces move yesterday.", searchDepth: 1, blunderChance: 0.35, positionalWeight: 0.3 },
+                { id: "b4", name: "Checkmate Chuck", elo: 620, avatar: "👦", desc: "Tries to look for scholar's mate every game.", searchDepth: 2, blunderChance: 0.25, positionalWeight: 0.4 },
+                { id: "b5", name: "Coffeehouse Cody", elo: 750, avatar: "☕", desc: "Plays rapid random attacks without thinking.", searchDepth: 2, blunderChance: 0.18, positionalWeight: 0.5 }
             ],
             intermediate: [
                 { id: "i1", name: "Casual Carl", elo: 850, avatar: "🧠", desc: "Plays balanced, basic standard club chess.", searchDepth: 2, blunderChance: 0.12, positionalWeight: 0.7 },
-                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent tactical vision, occasionally blunders.", searchDepth: 2, blunderChance: 0.09, positionalWeight: 0.8 }
+                { id: "i2", name: "Schoolyard Sam", elo: 1000, avatar: "🎒", desc: "Decent tactical vision, occasionally blunders.", searchDepth: 2, blunderChance: 0.09, positionalWeight: 0.8 },
+                { id: "i3", name: "Professor Penny", elo: 1150, avatar: "👓", desc: "Very safe developer but misses deep forks.", searchDepth: 3, blunderChance: 0.07, positionalWeight: 0.9 },
+                { id: "i4", name: "Tactical Toby", elo: 1300, avatar: "🏹", desc: "Enjoys sacrificing minor pieces for space.", searchDepth: 3, blunderChance: 0.05, positionalWeight: 1.0 },
+                { id: "i5", name: "Solid Sophia", elo: 1450, avatar: "🛡️", desc: "Extremely defensive style, waits for your errors.", searchDepth: 3, blunderChance: 0.03, positionalWeight: 1.1 }
             ],
             expert: [
                 { id: "e1", name: "Knight Rider", elo: 1600, avatar: "🐴", desc: "Obsessed with outposting advanced minor pieces.", searchDepth: 3, blunderChance: 0.02, positionalWeight: 1.2 },
-                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for highly aesthetic mating webs.", searchDepth: 3, blunderChance: 0.01, positionalWeight: 1.3 }
+                { id: "e2", name: "Maestro Marcus", elo: 1750, avatar: "🎻", desc: "Searches for highly aesthetic mating webs.", searchDepth: 3, blunderChance: 0.01, positionalWeight: 1.3 },
+                { id: "e3", name: "Positional Piper", elo: 1900, avatar: "🪈", desc: "Master of squeezing your pawn structures out.", searchDepth: 4, blunderChance: 0.01, positionalWeight: 1.4 },
+                { id: "e4", name: "Endgame Ethan", elo: 2050, avatar: "⏳", desc: "Swaps off heavy items to win simple endgames.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.5 },
+                { id: "e5", name: "Calculated Chloe", elo: 2150, avatar: "📊", desc: "Deep brute-force checker of structural lines.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.6 }
             ],
             gm: [
-                { id: "g1", name: "King Maker", elo: 2250, avatar: "👑", desc: "Exquisite control over open files.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.7 }
+                { id: "g1", name: "King Maker", elo: 2250, avatar: "👑", desc: "Exquisite control over open files.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.7 },
+                { id: "g2", name: "Oracle Owen", elo: 2380, avatar: "🔮", desc: "Foresees positional damage 8 moves away.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.8 },
+                { id: "g3", name: "Blizzard Boris", elo: 2500, avatar: "❄️", desc: "Cold, uncompromising tactical execution.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 1.9 },
+                { id: "g4", name: "Valkyrie Victoria", elo: 2620, avatar: "⚔️", desc: "Fierce attacks on opposite side castling layouts.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.0 },
+                { id: "g5", name: "Grandmaster Garry", elo: 2750, avatar: "🎖️", desc: "Legendary opening prep specialist.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.1 }
             ],
             supergm: [
-                { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.3 }
+                { id: "s1", name: "Deep Thinker", elo: 2900, avatar: "🤖", desc: "Advanced neural networks active.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.3 },
+                { id: "s2", name: "Volcano Magnus", elo: 3050, avatar: "🌋", desc: "Relentless positional pressure till you pop.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.5 },
+                { id: "s3", name: "Alpha Phoenix", elo: 3200, avatar: "🦅", desc: "Sacrifices positional structure for wild initiatives.", searchDepth: 4, blunderChance: 0.00, positionalWeight: 2.6 },
+                { id: "s4", name: "Cosmic Nebula", elo: 3350, avatar: "🌌", desc: "Sees lines humans cannot logically conceptualize.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 2.8 },
+                { id: "s5", name: "Chess Buddy Overlord", elo: 3450, avatar: "👽", desc: "Flawless mathematical perfection.", searchDepth: 5, blunderChance: 0.00, positionalWeight: 3.2 }
             ]
         };
 
-        /* =========================================
-           3. UI & SCREEN MANAGEMENT FIXES
-           ========================================= */
         function switchScreen(screenId) {
-            // Hide all
             document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            document.getElementById(screenId).style.display = 'flex';
             
-            // Show target
-            const targetScreen = document.getElementById(screenId);
-            targetScreen.style.display = 'flex';
-            targetScreen.classList.add('active');
-            
-            // FIX: Force board to recalculate its dimensions AFTER becoming visible
+            // Cascade resizes to guarantee render updates post-display switch across all screen modes
             if (screenId === 'game-screen' && board) {
-                setTimeout(() => { board.resize(); }, 50);
+                board.resize();
+                window.setTimeout(function() { board.resize(); }, 50);
+                window.setTimeout(function() { board.resize(); }, 150);
+                window.setTimeout(function() { board.resize(); }, 300);
+                window.setTimeout(function() { board.resize(); }, 600);
+            } else if (screenId === 'home-screen' && showcaseBoard) {
+                showcaseBoard.resize();
+                window.setTimeout(function() { showcaseBoard.resize(); }, 50);
+                window.setTimeout(function() { showcaseBoard.resize(); }, 150);
+                window.setTimeout(function() { showcaseBoard.resize(); }, 300);
+                window.setTimeout(function() { showcaseBoard.resize(); }, 600);
             }
+        }
+
+        // --- UPDATED AUTH MODAL ROUTING & USER RECOMMENDATION ---
+        function openAuthModal(mode) { 
+            const titleEl = document.getElementById('auth-title');
+            const subtitleEl = document.getElementById('auth-subtitle');
+            const recommendationEl = document.getElementById('signup-recommendation');
+            const userInp = document.getElementById('auth-username');
+            const passInp = document.getElementById('auth-password');
+
+            // Bugfix: Remove dangerous preset plain values across inputs
+            userInp.value = "";
+            passInp.value = "";
+
+            if (mode === 'signup') {
+                titleEl.innerText = "Create an Account";
+                subtitleEl.innerText = "Join the chess buddy ecosystem today.";
+                recommendationEl.style.display = 'flex';
+                generateRecommendedUsername(); // Inject custom user handle
+            } else {
+                titleEl.innerText = "Welcome back";
+                subtitleEl.innerText = "Synchronize profiles & performance history.";
+                recommendationEl.style.display = 'none';
+            }
+            document.getElementById('auth-modal').style.display = 'flex';
+        }
+        
+        function closeAuthModal(e) { document.getElementById('auth-modal').style.display = 'none'; }
+
+        function generateRecommendedUsername() {
+            const prefixBank = ["Pawn", "Knight", "Rook", "Bishop", "Queen", "King", "Gambit", "Checkmate", "Castle", "Tactician", "Grandmaster", "EnPassant"];
+            const suffixBank = ["Slayer", "Pro", "Rider", "Sniper", "Titan", "Wizard", "Chaser", "Stormer", "Overlord", "Boss", "Buddy"];
+            
+            const randomPrefix = prefixBank[Math.floor(Math.random() * prefixBank.length)];
+            const randomSuffix = suffixBank[Math.floor(Math.random() * suffixBank.length)];
+            const uniqueID = Math.floor(100 + Math.random() * 900); // 3 digit variance
+            
+            document.getElementById('auth-username').value = randomPrefix + randomSuffix + uniqueID;
+        }
+
+        function handleNativeAuthSubmission() {
+            var typedUsername = document.getElementById('auth-username').value.trim() || "Guest Master";
+            document.getElementById('auth-modal').style.display = 'none';
+            executeNativeLogin(typedUsername, '🦊');
+        }
+
+        function executeNativeLogin(username, avatarMarkup) {
+            currentUserSession = { username: username, displayElo: 500, avatar: avatarMarkup };
+            document.getElementById('profile-display-name').innerText = currentUserSession.username;
+            document.getElementById('user-avatar-container').innerHTML = currentUserSession.avatar;
+            document.getElementById('profile-display-elo').innerText = currentUserSession.displayElo;
+            document.getElementById('logged-out-view').style.display = 'none';
+            document.getElementById('logged-in-view').style.display = 'flex';
         }
 
         function initVerticalLobby() {
             Object.keys(botDatabase).forEach(rankKey => {
                 var container = document.getElementById("grid-" + rankKey);
                 if (!container) return;
-                container.innerHTML = ""; // clear
+                container.innerHTML = "";
                 botDatabase[rankKey].forEach(bot => {
                     var card = document.createElement("div");
                     card.className = "bot-card";
                     card.onclick = () => { activeBot = bot; isLocalFriendMode = false; selectBotMatchDirectly(); };
-                    card.innerHTML = `<div class="bot-identity-group"><div class="bot-avatar">${bot.avatar}</div><div class="bot-meta-text"><p class="bot-name">${bot.name}</p><p class="bot-desc">${bot.desc}</p></div></div><div class="bot-elo-badge">${bot.elo} ELO</div>`;
+                    card.innerHTML = `<div class="bot-identity-group"><div class="bot-avatar">${bot.avatar}</div><div><strong>${bot.name}</strong><br><small>${bot.desc}</small></div></div><div class="bot-elo-badge">${bot.elo} ELO</div>`;
                     container.appendChild(card);
                 });
             });
         }
 
-        /* =========================================
-           4. GAME LOGIC
-           ========================================= */
         function openTimerSelectionModal(isLocalMode) {
             isLocalFriendMode = isLocalMode;
             document.getElementById('timer-modal').style.display = 'flex';
@@ -542,7 +772,6 @@
             switchScreen('home-screen');
         }
 
-        // --- Clock & Visuals ---
         function formatTimeDigits(totalMs) {
             if (totalMs <= 0) return "00:00";
             var totalSecs = Math.ceil(totalMs / 1000);
@@ -554,6 +783,7 @@
         function updateClockVisualDisplays() {
             document.getElementById('clock-white').innerText = formatTimeDigits(whiteMsLeft);
             document.getElementById('clock-black').innerText = formatTimeDigits(blackMsLeft);
+
             if (game.turn() === 'w') {
                 document.getElementById('timer-w-card').classList.add('active-turn');
                 document.getElementById('timer-b-card').classList.remove('active-turn');
@@ -570,21 +800,23 @@
                 return;
             }
             document.getElementById('clocks-container').style.display = 'flex';
+            
             lastTurnSwitchTimestamp = Date.now();
             updateClockVisualDisplays();
             
             clockIntervalTracker = setInterval(function() {
                 if (game.game_over()) { clearInterval(clockIntervalTracker); return; }
+                
                 var now = Date.now();
                 var elapsedMs = now - lastTurnSwitchTimestamp;
                 lastTurnSwitchTimestamp = now;
 
                 if (game.turn() === 'w') {
                     whiteMsLeft -= elapsedMs;
-                    if (whiteMsLeft <= 0) { whiteMsLeft = 0; flagOutEndGame('Black'); }
+                    if (whiteMsLeft <= 0) { whiteMsLeft = 0; clearInterval(clockIntervalTracker); flagOutEndGame('Black'); }
                 } else {
                     blackMsLeft -= elapsedMs;
-                    if (blackMsLeft <= 0) { blackMsLeft = 0; flagOutEndGame('White'); }
+                    if (blackMsLeft <= 0) { blackMsLeft = 0; clearInterval(clockIntervalTracker); flagOutEndGame('White'); }
                 }
                 updateClockVisualDisplays();
             }, 100);
@@ -597,7 +829,6 @@
             compileGameSummary();
         }
 
-        // --- Board Evaluation ---
         function evaluateBoard(boardState, posWeightFactor = 1.0) {
             var score = 0;
             for (var i = 0; i < 8; i++) {
@@ -610,7 +841,8 @@
                             var row = (piece.color === 'w') ? (7 - i) : i;
                             pWeight = POSITION_WEIGHTS[piece.type][row][j] * posWeightFactor;
                         }
-                        score += (piece.color === 'w' ? (baseVal + pWeight) : -(baseVal + pWeight));
+                        var squareValue = baseVal + pWeight;
+                        score += (piece.color === 'w' ? squareValue : -squareValue);
                     }
                 }
             }
@@ -620,6 +852,7 @@
         function updateWinLossPredictionBar() {
             var rawScore = evaluateBoard(game.board(), 1.0) / 100.0;
             document.getElementById('eval-numerical').innerText = (rawScore >= 0 ? "+" : "") + rawScore.toFixed(1);
+
             var whitePercent = Math.min(95, Math.max(5, 50 + (rawScore * 4)));
             document.getElementById('eval-bar-white').style.width = whitePercent + "%";
             document.getElementById('eval-label').innerText = Math.abs(rawScore) > 1.5 ? 
@@ -629,15 +862,24 @@
         function updateStatusAndLog() {
             updateWinLossPredictionBar();
             var statusText = game.game_over() ? "Match Complete!" : (game.turn() === 'w' ? "White to move" : "Black to move");
-            if (isBotThinking && !game.game_over()) statusText = `⚙️ ${activeBot.name} is calculating...`;
+            
+            if (isBotThinking && !game.game_over()) {
+                statusText = `⚙️ ${activeBot.name} is calculating lines...`;
+            }
+            
             document.getElementById('status').innerHTML = statusText;
 
             var history = game.history();
             var html = "";
             for (var i = 0; i < history.length; i += 2) {
-                html += `<div class="move-row"><span class="move-number">${Math.floor(i / 2) + 1}.</span><span>${history[i]}</span><span>${history[i + 1] || ""}</span></div>`;
+                html += `<div class="move-row">` +
+                        `<span class="move-number">${Math.floor(i / 2) + 1}.</span>` +
+                        `<span>${history[i]}</span>` +
+                        `<span>${history[i + 1] || ""}</span>` +
+                        `</div>`;
             }
             document.getElementById('move-history').innerHTML = html;
+            
             var scrollContainer = document.getElementById('move-history');
             scrollContainer.scrollTop = scrollContainer.scrollHeight;
 
@@ -663,9 +905,11 @@
             quitActiveMatch();
         }
 
-        // --- Bot Logic ---
         function minimaxSearch(depth, isMaximizing, alpha, beta, posFactor) {
-            if (depth === 0 || game.game_over()) return evaluateBoard(game.board(), posFactor);
+            if (depth === 0 || game.game_over()) {
+                return evaluateBoard(game.board(), posFactor);
+            }
+
             var moves = game.moves();
             moves.sort(function(a, b) {
                 if (b.indexOf('#') !== -1) return 1;
@@ -701,6 +945,7 @@
 
         function asyncComputeBotMove(callback) {
             if (game.game_over()) return;
+
             var legalMoves = game.moves();
             if (legalMoves.length === 0) return;
 
@@ -708,7 +953,7 @@
                 var poorMoves = [];
                 for (var i = 0; i < legalMoves.length; i++) {
                     game.move(legalMoves[i]);
-                    if (!game.in_check()) poorMoves.push(legalMoves[i]);
+                    if (!game.in_check()) { poorMoves.push(legalMoves[i]); }
                     game.undo();
                 }
                 var blunder = poorMoves.length > 0 ? poorMoves[Math.floor(Math.random() * poorMoves.length)] : legalMoves[Math.floor(Math.random() * legalMoves.length)];
@@ -725,7 +970,11 @@
 
             function processNextMoveChunk() {
                 if (!isBotThinking || game.game_over()) return;
-                if (index >= legalMoves.length) { callback(optimalMove || legalMoves[0]); return; }
+
+                if (index >= legalMoves.length) {
+                    callback(optimalMove || legalMoves[0]);
+                    return;
+                }
 
                 var action = legalMoves[index];
                 game.move(action);
@@ -748,6 +997,7 @@
 
         function makeBotMove() {
             if (game.game_over() || !isBotThinking) return;
+            
             asyncComputeBotMove(function(chosenMove) {
                 if (chosenMove && isBotThinking) {
                     game.move(chosenMove);
@@ -760,16 +1010,23 @@
             });
         }
 
-        // --- User Interaction ---
         function removeGreyCircles() { $('#my-board .square-55d63').removeClass('legal-move-marker'); }
         function greySquare(square) { $('#my-board .square-' + square).addClass('legal-move-marker'); }
 
         function onDragStart(source, piece) {
             if (game.game_over() || isBotThinking) return false;
-            if (!isLocalFriendMode && game.turn() === 'b') return false;
+            
+            // Single-player AI Mode: Player can only touch White pieces
+            if (!isLocalFriendMode && piece.search(/^b/) !== -1) return false;
+
+            // Turn Enforcement: Only allow piece selection matching active turn color
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
 
             var moves = game.moves({ square: source, verbose: true });
-            if (moves.length === 0) return;
+            if (moves.length === 0) return false;
             for (var i = 0; i < moves.length; i++) { greySquare(moves[i].to); }
         }
 
@@ -799,22 +1056,13 @@
             
             game.reset();
             board.start();
+            board.resize(); // Direct canvas size override
             removeGreyCircles();
             updateStatusAndLog();
             startClockCountingLogic();
         }
 
-        /* =========================================
-           5. SYSTEM INITIALIZATION
-           ========================================= */
         window.onload = function() {
-            // Guarantee DOM Elements are ready before library execution
-            showcaseBoard = Chessboard('showcase-board', {
-                position: 'start',
-                draggable: false,
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-            });
-
             board = Chessboard('my-board', {
                 position: 'start',
                 draggable: true,
@@ -824,14 +1072,26 @@
                 onSnapbackEnd: removeGreyCircles
             });
 
-            // Populate Lobby UI
+            showcaseBoard = Chessboard('showcase-board', {
+                position: 'start',
+                draggable: false,
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            });
+
             initVerticalLobby();
             
-            // Force container calculations
-            window.setTimeout(() => { 
-                if(showcaseBoard) showcaseBoard.resize(); 
-            }, 150);
+            // Bugfix: Cascading staggered timeouts + synthetic event dispatch ensures 
+            // the showcase board computes its aspect-ratio bounds perfectly on load.
+            window.setTimeout(function() { showcaseBoard.resize(); board.resize(); }, 50);
+            window.setTimeout(function() { showcaseBoard.resize(); board.resize(); window.dispatchEvent(new Event('resize')); }, 250);
+            window.setTimeout(function() { showcaseBoard.resize(); board.resize(); }, 600);
         };
+
+        // Bridge responsive resize handler to catch mobile orientation adjustments
+        window.addEventListener('resize', function() {
+            if (board) board.resize();
+            if (showcaseBoard) showcaseBoard.resize();
+        });
     </script>
 </body>
 </html>
