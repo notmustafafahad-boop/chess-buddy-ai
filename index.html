@@ -7,14 +7,20 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Initialize Supabase
-        const supabase = supabase.createClient(
-            'https://vfdkkawjlvqopibeydws.supabase.co', 
-            'sb_publishable_XBhznaGk-YxT3Xg6XgNFxw_fe-JrWdK'
-        );
+        // Initialize Supabase Safely using the explicit window reference to avoid scoping crashes
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(
+                'https://vfdkkawjlvqopibeydws.supabase.co', 
+                'sb_publishable_XBhznaGk-YxT3Xg6XgNFxw_fe-JrWdK'
+            );
+        } catch (e) {
+            console.error("Supabase initialization failed:", e);
+        }
 
         // --- GOOGLE AUTH LOGIC ---
         async function signInWithGoogle() {
+            if (!supabase) return console.error("Supabase not initialized");
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.origin }
@@ -23,6 +29,7 @@
         }
 
         async function triggerLogout() {
+            if (!supabase) return;
             await supabase.auth.signOut();
             window.location.reload();
         }
@@ -508,16 +515,19 @@
     
     <script>
         // --- AUTH SESSION CHECK ---
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
-                document.getElementById('logged-out-view').style.display = 'none';
-                document.getElementById('logged-in-view').style.display = 'flex';
-                document.getElementById('profile-display-name').innerText = session.user.email;
-            }
-        });
+        if (supabase) {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                    document.getElementById('logged-out-view').style.display = 'none';
+                    document.getElementById('logged-in-view').style.display = 'flex';
+                    document.getElementById('profile-display-name').innerText = session.user.email;
+                }
+            }).catch(e => console.log("Session recovery dynamic error skipped."));
+        }
 
         // --- SUPABASE CLOUD SAVE ---
         async function saveGameToCloud(pgnData) {
+            if (!supabase) return;
             const { data, error } = await supabase
                 .from('games')
                 .insert([{ pgn: pgnData, result: 'finished' }]);
@@ -656,20 +666,8 @@
             document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
             document.getElementById(screenId).classList.add('active');
             document.getElementById(screenId).style.display = 'flex';
-            
-            // Cascade resizes to guarantee render updates post-display switch across all screen modes
             if (screenId === 'game-screen' && board) {
-                board.resize();
-                window.setTimeout(function() { board.resize(); }, 50);
-                window.setTimeout(function() { board.resize(); }, 150);
-                window.setTimeout(function() { board.resize(); }, 300);
-                window.setTimeout(function() { board.resize(); }, 600);
-            } else if (screenId === 'home-screen' && showcaseBoard) {
-                showcaseBoard.resize();
-                window.setTimeout(function() { showcaseBoard.resize(); }, 50);
-                window.setTimeout(function() { showcaseBoard.resize(); }, 150);
-                window.setTimeout(function() { showcaseBoard.resize(); }, 300);
-                window.setTimeout(function() { showcaseBoard.resize(); }, 600);
+                window.setTimeout(function() { board.resize(); }, 100);
             }
         }
 
@@ -681,7 +679,6 @@
             const userInp = document.getElementById('auth-username');
             const passInp = document.getElementById('auth-password');
 
-            // Bugfix: Remove dangerous preset plain values across inputs
             userInp.value = "";
             passInp.value = "";
 
@@ -689,7 +686,7 @@
                 titleEl.innerText = "Create an Account";
                 subtitleEl.innerText = "Join the chess buddy ecosystem today.";
                 recommendationEl.style.display = 'flex';
-                generateRecommendedUsername(); // Inject custom user handle
+                generateRecommendedUsername(); 
             } else {
                 titleEl.innerText = "Welcome back";
                 subtitleEl.innerText = "Synchronize profiles & performance history.";
@@ -706,7 +703,7 @@
             
             const randomPrefix = prefixBank[Math.floor(Math.random() * prefixBank.length)];
             const randomSuffix = suffixBank[Math.floor(Math.random() * suffixBank.length)];
-            const uniqueID = Math.floor(100 + Math.random() * 900); // 3 digit variance
+            const uniqueID = Math.floor(100 + Math.random() * 900); 
             
             document.getElementById('auth-username').value = randomPrefix + randomSuffix + uniqueID;
         }
@@ -1015,18 +1012,10 @@
 
         function onDragStart(source, piece) {
             if (game.game_over() || isBotThinking) return false;
-            
-            // Single-player AI Mode: Player can only touch White pieces
-            if (!isLocalFriendMode && piece.search(/^b/) !== -1) return false;
-
-            // Turn Enforcement: Only allow piece selection matching active turn color
-            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-                return false;
-            }
+            if (!isLocalFriendMode && game.turn() === 'b') return false;
 
             var moves = game.moves({ square: source, verbose: true });
-            if (moves.length === 0) return false;
+            if (moves.length === 0) return;
             for (var i = 0; i < moves.length; i++) { greySquare(moves[i].to); }
         }
 
@@ -1056,7 +1045,6 @@
             
             game.reset();
             board.start();
-            board.resize(); // Direct canvas size override
             removeGreyCircles();
             updateStatusAndLog();
             startClockCountingLogic();
@@ -1080,18 +1068,10 @@
 
             initVerticalLobby();
             
-            // Bugfix: Cascading staggered timeouts + synthetic event dispatch ensures 
-            // the showcase board computes its aspect-ratio bounds perfectly on load.
             window.setTimeout(function() { showcaseBoard.resize(); board.resize(); }, 50);
             window.setTimeout(function() { showcaseBoard.resize(); board.resize(); window.dispatchEvent(new Event('resize')); }, 250);
             window.setTimeout(function() { showcaseBoard.resize(); board.resize(); }, 600);
         };
-
-        // Bridge responsive resize handler to catch mobile orientation adjustments
-        window.addEventListener('resize', function() {
-            if (board) board.resize();
-            if (showcaseBoard) showcaseBoard.resize();
-        });
     </script>
 </body>
 </html>
