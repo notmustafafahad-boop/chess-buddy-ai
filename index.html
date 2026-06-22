@@ -7,21 +7,15 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Initialize Supabase Safely using the explicit window reference to avoid scoping crashes
-        let supabase;
-        try {
-            supabase = window.supabase.createClient(
-                'https://vfdkkawjlvqopibeydws.supabase.co', 
-                'sb_publishable_XBhznaGk-YxT3Xg6XgNFxw_fe-JrWdK'
-            );
-        } catch (e) {
-            console.error("Supabase initialization failed:", e);
-        }
+        // Initialize Supabase correctly without variable collision
+        const supabaseClient = supabase.createClient(
+            'https://vfdkkawjlvqopibeydws.supabase.co', 
+            'sb_publishable_XBhznaGk-YxT3Xg6XgNFxw_fe-JrWdK'
+        );
 
         // --- GOOGLE AUTH LOGIC ---
         async function signInWithGoogle() {
-            if (!supabase) return console.error("Supabase not initialized");
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.origin }
             });
@@ -29,8 +23,7 @@
         }
 
         async function triggerLogout() {
-            if (!supabase) return;
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             window.location.reload();
         }
     </script>
@@ -515,20 +508,17 @@
     
     <script>
         // --- AUTH SESSION CHECK ---
-        if (supabase) {
-            supabase.auth.getSession().then(({ data: { session } }) => {
-                if (session) {
-                    document.getElementById('logged-out-view').style.display = 'none';
-                    document.getElementById('logged-in-view').style.display = 'flex';
-                    document.getElementById('profile-display-name').innerText = session.user.email;
-                }
-            }).catch(e => console.log("Session recovery dynamic error skipped."));
-        }
+        supabaseClient.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                document.getElementById('logged-out-view').style.display = 'none';
+                document.getElementById('logged-in-view').style.display = 'flex';
+                document.getElementById('profile-display-name').innerText = session.user.email;
+            }
+        });
 
         // --- SUPABASE CLOUD SAVE ---
         async function saveGameToCloud(pgnData) {
-            if (!supabase) return;
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('games')
                 .insert([{ pgn: pgnData, result: 'finished' }]);
             
@@ -1012,6 +1002,13 @@
 
         function onDragStart(source, piece) {
             if (game.game_over() || isBotThinking) return false;
+            
+            // Only allow dragging pieces belonging to the side whose turn it is
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+
             if (!isLocalFriendMode && game.turn() === 'b') return false;
 
             var moves = game.moves({ square: source, verbose: true });
